@@ -1,0 +1,8 @@
+{
+  "_comment": "Polices des textes. Liste définitive [TBD] : chaque police doit avoir une licence compatible usage commercial. Les polices système ci-dessous sont provisoires et ne doivent pas partir à l'impression.",
+  "provisional": true,
+  "fonts": [
+    { "id": "system-sans", "name": "Sans-serif système (provisoire)", "family": "system-ui, 'Segoe UI', Roboto, Arial, sans-serif", "weights": [400, 700], "license": "[TBD]" },
+    { "id": "system-serif", "name": "Serif système (provisoire)", "family": "Georgia, 'Times New Roman', serif", "weights": [400, 700], "license": "[TBD]" }
+  ]
+}

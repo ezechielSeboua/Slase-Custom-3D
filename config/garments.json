@@ -1,0 +1,364 @@
+{
+  "_comment": "Chaque modèle : chemin du GLB, nom du matériau du tissu, échelle et repères des zones. surface_cm = surface du vêtement entier (devant ou dos, du bas du col à l'ourlet), utilisée tant que print-zones.json est [TBD]. provisional = forme provisoire ; scale_provisional = vrai modèle dont l'échelle reste à confirmer. coming_soon = vêtement visible mais pas encore proposé (message « bientôt disponible ») ; retirer le drapeau pour l'activer.",
+  "garments": [
+    {
+      "id": "tshirt",
+      "fits": {
+        "normal": {
+          "_comment": "Modèle Meshy (tshirt-mockup(5).glb) préparé par scripts/prepare-model.mjs. Échelle provisoire : 72 cm du haut du col à l'ourlet, à remplacer par la mesure réelle (relancer le script, puis mettre scale_provisional à false).",
+          "model": "/models/tshirt-normal.glb",
+          "material": "fabric",
+          "scale_provisional": true,
+          "units_per_cm": 0.01,
+          "zones": {
+            "front": {
+              "origin": [
+                0,
+                -0.061,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                1
+              ],
+              "surface_cm": {
+                "width": 35,
+                "top": 0,
+                "height": 65
+              }
+            },
+            "back": {
+              "origin": [
+                0,
+                -0.003,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                -1
+              ],
+              "surface_cm": {
+                "width": 35,
+                "top": 0,
+                "height": 71
+              }
+            },
+            "left_sleeve": {
+              "origin": [
+                0.199,
+                -0.221,
+                -0.01
+              ],
+              "normal": [
+                0.646,
+                0.763,
+                0
+              ],
+              "up": [
+                -0.763,
+                0.646,
+                0
+              ],
+              "surface_cm": {
+                "width": 8,
+                "top": 0,
+                "height": 14
+              }
+            },
+            "right_sleeve": {
+              "origin": [
+                -0.2,
+                -0.238,
+                -0.01
+              ],
+              "normal": [
+                -0.61,
+                0.792,
+                0
+              ],
+              "up": [
+                0.792,
+                0.61,
+                0
+              ],
+              "surface_cm": {
+                "width": 8,
+                "top": 0,
+                "height": 13
+              }
+            }
+          }
+        },
+        "oversize": {
+          "_comment": "Modèle Meshy (tshirt-mockup(1).glb) préparé par scripts/prepare-model.mjs. Échelle provisoire : 78 cm du haut du col à l'ourlet, à remplacer par la mesure réelle (relancer le script, puis mettre scale_provisional à false).",
+          "model": "/models/tshirt-oversize.glb",
+          "material": "fabric",
+          "scale_provisional": true,
+          "units_per_cm": 0.01,
+          "zones": {
+            "front": {
+              "origin": [
+                0,
+                -0.063,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                1
+              ],
+              "surface_cm": {
+                "width": 39,
+                "top": 0,
+                "height": 71
+              }
+            },
+            "back": {
+              "origin": [
+                0,
+                -0.008,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                -1
+              ],
+              "surface_cm": {
+                "width": 39,
+                "top": 0,
+                "height": 77
+              }
+            },
+            "left_sleeve": {
+              "origin": [
+                0.223,
+                -0.241,
+                -0.016
+              ],
+              "normal": [
+                0.767,
+                0.641,
+                0
+              ],
+              "up": [
+                -0.641,
+                0.767,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 20
+              }
+            },
+            "right_sleeve": {
+              "origin": [
+                -0.225,
+                -0.239,
+                -0.019
+              ],
+              "normal": [
+                -0.766,
+                0.642,
+                0
+              ],
+              "up": [
+                0.642,
+                0.766,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 20
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sweater",
+      "coming_soon": true,
+      "fits": {
+        "normal": {
+          "_comment": "Sweater OBJ (public/models/sweater/) converti par scripts/convert-obj.mjs puis préparé par scripts/prepare-model.mjs. Échelle provisoire : 72 cm du haut du col au bas du vêtement. Les manches sont soudées au corps : leurs zones ont été mesurées à part (épaule → poignet). Modèle plat (13 cm d'épaisseur) : les zones de manche se projettent depuis l'avant-extérieur (30° de la face avant) pour tomber sur la face large de la manche.",
+          "model": "/models/sweater-normal.glb",
+          "material": "fabric",
+          "scale_provisional": true,
+          "units_per_cm": 0.01,
+          "zones": {
+            "front": {
+              "origin": [
+                0,
+                -0.104,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                1
+              ],
+              "surface_cm": {
+                "width": 38,
+                "top": 0,
+                "height": 60
+              }
+            },
+            "back": {
+              "origin": [
+                0,
+                -0.006,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                -1
+              ],
+              "surface_cm": {
+                "width": 38,
+                "top": 0,
+                "height": 70
+              }
+            },
+            "left_sleeve": {
+              "origin": [
+                0.212,
+                -0.13,
+                0
+              ],
+              "normal": [
+                0.468,
+                0.176,
+                0.866
+              ],
+              "up": [
+                -0.352,
+                0.936,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 52
+              }
+            },
+            "right_sleeve": {
+              "origin": [
+                -0.211,
+                -0.133,
+                0
+              ],
+              "normal": [
+                -0.466,
+                0.179,
+                0.866
+              ],
+              "up": [
+                0.359,
+                0.933,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 51
+              }
+            }
+          }
+        },
+        "oversize": {
+          "_comment": "Dérivé du tee-shirt oversize par scripts/derive-sweater.mjs (manches 60 cm, abaissées de 12°). Approximation en attendant un vrai modèle de sweater.",
+          "model": "/models/sweater-oversize.glb",
+          "material": "fabric",
+          "scale_provisional": true,
+          "units_per_cm": 0.01,
+          "zones": {
+            "front": {
+              "origin": [
+                0,
+                -0.063,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                1
+              ],
+              "surface_cm": {
+                "width": 36,
+                "top": 0,
+                "height": 71
+              }
+            },
+            "back": {
+              "origin": [
+                0,
+                -0.008,
+                0
+              ],
+              "normal": [
+                0,
+                0,
+                -1
+              ],
+              "surface_cm": {
+                "width": 36,
+                "top": 0,
+                "height": 77
+              }
+            },
+            "left_sleeve": {
+              "origin": [
+                0.216,
+                -0.188,
+                -0.02
+              ],
+              "normal": [
+                0.844,
+                0.536,
+                0
+              ],
+              "up": [
+                -0.536,
+                0.844,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 64
+              }
+            },
+            "right_sleeve": {
+              "origin": [
+                -0.214,
+                -0.243,
+                -0.02
+              ],
+              "normal": [
+                -0.81,
+                0.587,
+                0
+              ],
+              "up": [
+                0.587,
+                0.81,
+                0
+              ],
+              "surface_cm": {
+                "width": 7,
+                "top": 0,
+                "height": 59
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

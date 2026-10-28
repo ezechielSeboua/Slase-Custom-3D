@@ -1,0 +1,18 @@
+{
+  "_comment": "Emplacements d'impression courants. Valeurs habituelles du marché, à valider avec l'atelier (provisional). x_cm : centre de l'élément depuis l'axe, positif vers la droite de la zone vue de l'extérieur (au devant, positif = gauche du porteur). anchor \"top\" : le haut de l'élément est à offset_cm du bas du col (de l'épaule pour une manche). anchor \"bottom\" : le bas de l'élément est à offset_cm de l'ourlet. width_cm : largeur proposée ; max_width_cm : au-delà, avertissement. rotation_deg : 90 = texte qui se lit en descendant le long du bras. fit_offset_cm : décalage vers le bas selon la coupe. garments : vêtements concernés (tous si absent).",
+  "provisional": true,
+  "placements": [
+    { "id": "left-chest", "name": "Poitrine gauche", "zone": "front", "x_cm": 10, "anchor": "top", "offset_cm": 8, "width_cm": 9, "max_width_cm": 10, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "right-chest", "name": "Poitrine droite", "zone": "front", "x_cm": -10, "anchor": "top", "offset_cm": 8, "width_cm": 9, "max_width_cm": 10, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "center-chest", "name": "Centre poitrine", "zone": "front", "x_cm": 0, "anchor": "top", "offset_cm": 7, "width_cm": 11, "max_width_cm": 12, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "full-front", "name": "Grand devant", "zone": "front", "x_cm": 0, "anchor": "top", "offset_cm": 7, "width_cm": 28, "max_width_cm": 30, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "back-neck", "name": "Nuque", "zone": "back", "x_cm": 0, "anchor": "top", "offset_cm": 3, "width_cm": 7, "max_width_cm": 8 },
+    { "id": "upper-back", "name": "Haut du dos", "zone": "back", "x_cm": 0, "anchor": "top", "offset_cm": 8, "width_cm": 28, "max_width_cm": 30, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "full-back", "name": "Grand dos", "zone": "back", "x_cm": 0, "anchor": "top", "offset_cm": 10, "width_cm": 28, "max_width_cm": 30, "fit_offset_cm": { "oversize": 2 } },
+    { "id": "lower-back", "name": "Bas du dos", "zone": "back", "x_cm": 0, "anchor": "bottom", "offset_cm": 10, "width_cm": 18, "max_width_cm": 20 },
+    { "id": "left-shoulder", "name": "Logo épaule gauche", "zone": "left_sleeve", "x_cm": 0, "anchor": "top", "offset_cm": 6, "width_cm": 7, "max_width_cm": 8 },
+    { "id": "right-shoulder", "name": "Logo épaule droite", "zone": "right_sleeve", "x_cm": 0, "anchor": "top", "offset_cm": 6, "width_cm": 7, "max_width_cm": 8 },
+    { "id": "left-arm-text", "name": "Texte le long du bras gauche", "zone": "left_sleeve", "x_cm": 0, "anchor": "top", "offset_cm": 8, "width_cm": 25, "max_width_cm": 40, "rotation_deg": 90, "garments": ["sweater"] },
+    { "id": "right-arm-text", "name": "Texte le long du bras droit", "zone": "right_sleeve", "x_cm": 0, "anchor": "top", "offset_cm": 8, "width_cm": 25, "max_width_cm": 40, "rotation_deg": 90, "garments": ["sweater"] }
+  ]
+}

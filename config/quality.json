@@ -1,0 +1,8 @@
+{
+  "_comment": "Seuils des contrôles automatiques. min_dpi : 300 par défaut (cahier des charges). contrast_min_ratio : rapport de contraste WCAG minimal entre texte et tissu, 3 par défaut (seuil WCAG pour le texte large), à confirmer.",
+  "min_dpi": 300,
+  "text_export_dpi": 300,
+  "contrast_min_ratio": 3,
+  "max_texture_px": 2048,
+  "preview_width_px": 2048
+}

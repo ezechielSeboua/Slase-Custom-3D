@@ -1,0 +1,39 @@
+/* Généré par docs/maquettes/src/build.mjs — à importer après "tailwindcss" (Tailwind v4). */
+@theme {
+  --spacing-s1: 16px;
+  --spacing-s2: 8px;
+  --spacing-s3: 24px;
+  --spacing-s4: 12px;
+  --spacing-s5: 32px;
+  --spacing-touch-min: 44px;
+  --spacing-h-btn: 44px;
+  --spacing-h-field: 44px;
+  --spacing-h-seg: 44px;
+  --spacing-p-seg: 4px;
+  --spacing-swatch: 44px;
+  --spacing-h-chip: 32px;
+  --spacing-h-row: 56px;
+  --spacing-thumb-layer: 40px;
+  --spacing-h-topbar: 56px;
+  --spacing-h-handle: 24px;
+  --spacing-handle-vis: 12px;
+  --spacing-handle-hit: 44px;
+  --spacing-rot-offset: 24px;
+  --spacing-icon: 20px;
+  --spacing-h-card-type-m: 200px;
+  --spacing-h-card-type-d: 300px;
+  --spacing-h-card-fit: 100px;
+  --spacing-w-panel: 320px;
+  --spacing-w-max: 1280px;
+  --spacing-w-col: 800px;
+  --spacing-w-dialog: 560px;
+  --spacing-h-sheet-peek: 84px;
+  --spacing-h-sheet-mid: 360px;
+  --radius-r1: 12px;
+  --radius-r2: 3px;
+  --radius-r-ctl: 8px;
+  --radius-r-seg-in: 3px;
+  --radius-r-focus: 12px;
+  --radius-r-pill: 16px;
+  --breakpoint-desk: 1024px;
+}

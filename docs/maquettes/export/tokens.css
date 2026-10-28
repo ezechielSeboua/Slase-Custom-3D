@@ -1,0 +1,58 @@
+/* Généré par docs/maquettes/src/build.mjs — ne pas modifier à la main. */
+:root {
+  --s1: 16px;
+  --s2: 8px;
+  --s3: 24px;
+  --s4: 12px;
+  --s5: 32px;
+  --b: 1px;
+  --focus-ring: 2px;
+  --focus-offset: 2px;
+  --r1: 12px;
+  --r2: 3px;
+  --r-ctl: 8px;
+  --r-seg-in: 3px;
+  --r-focus: 12px;
+  --r-pill: 16px;
+  --touch-min: 44px;
+  --h-btn: 44px;
+  --h-field: 44px;
+  --h-seg: 44px;
+  --p-seg: 4px;
+  --swatch: 44px;
+  --h-chip: 32px;
+  --h-row: 56px;
+  --thumb-layer: 40px;
+  --h-topbar: 56px;
+  --h-handle: 24px;
+  --handle-vis: 12px;
+  --handle-hit: 44px;
+  --rot-offset: 24px;
+  --icon: 20px;
+  --h-card-type-m: 200px;
+  --h-card-type-d: 300px;
+  --h-card-fit: 100px;
+  --w-mobile: 390px;
+  --h-mobile: 844px;
+  --w-desktop: 1440px;
+  --h-desktop: 900px;
+  --bp-desktop: 1024px;
+  --w-panel: 320px;
+  --w-max: 1280px;
+  --w-col: 800px;
+  --w-dialog: 560px;
+  --h-sheet-peek: 84px;
+  --h-sheet-mid: 360px;
+  --cols-mobile: 4px;
+  --cols-desktop: 12px;
+  /* TODO app.name : [TBD] */
+  /* TODO font.ui : [TBD] */
+  /* TODO color.ui (fond, encre, accent) : [TBD] */
+  /* TODO shadow.panel : [TBD] */
+  /* TODO motion.camera (durée, courbe) : [TBD] */
+  /* TODO colors.json (palette du tissu) : [TBD] */
+  /* TODO fonts.json (polices des textes) : [TBD] */
+  /* TODO print-zones.json (dimensions des 4 zones) : [TBD] */
+  /* TODO print.technique : [TBD] */
+  /* TODO quality.contrast_threshold : [TBD] */
+}

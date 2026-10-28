@@ -1,0 +1,9 @@
+{
+  "_comment": "Palette du tissu : nom + code hexadécimal. Liste définitive [TBD] ; ces couleurs sont provisoires.",
+  "provisional": true,
+  "colors": [
+    { "id": "blanc", "name": "Blanc", "hex": "#ffffff" },
+    { "id": "noir", "name": "Noir", "hex": "#000000" },
+    { "id": "rose-clair", "name": "Rose clair", "hex": "#f6c6d0" }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "_comment": "Zones d'impression. full_garment = true : l'atelier imprime sur toute la surface du vêtement ; la zone imprimable est alors le vêtement entier (devant, dos, chaque manche) et rien n'est à confirmer. Pour un atelier aux limites plus étroites, passer full_garment à false et remplir les dimensions de chaque zone en cm (top_cm = distance du bas du col, ou de l'épaule pour une manche, au haut de la zone). Une zone dont les trois valeurs sont des nombres s'applique même avec full_garment = true.",
+  "technique": "[TBD]",
+  "full_garment": true,
+  "zones": {
+    "tshirt": {
+      "front": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "back": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "left_sleeve": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "right_sleeve": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      }
+    },
+    "sweater": {
+      "front": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "back": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "left_sleeve": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      },
+      "right_sleeve": {
+        "width_cm": "[TBD]",
+        "height_cm": "[TBD]",
+        "top_cm": "[TBD]"
+      }
+    }
+  }
+}

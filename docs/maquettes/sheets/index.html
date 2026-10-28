@@ -1,0 +1,73 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configurateur 3D — maquettes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+:root{--paper:#eef0f1;--sheet:#f6f7f8;--ink:#1b1e22;--line2:#4f555c;--line3:#9298a0;--rule:#c4c9ce;
+--cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--paper:#111316;--sheet:#171a1d;--ink:#e4e7ea;--line2:#a6acb3;--line3:#646a72;--rule:#30353a;color-scheme:dark}}
+:root[data-theme="dark"]{--paper:#111316;--sheet:#171a1d;--ink:#e4e7ea;--line2:#a6acb3;--line3:#646a72;--rule:#30353a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:13px/1.55 var(--mono)}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 16px 64px}
+h1,h2,h3{font-family:var(--cond);letter-spacing:.06em;text-transform:uppercase;margin:32px 0 12px}
+h1{font-size:28px;margin-top:8px}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--cond);letter-spacing:.06em;text-transform:uppercase;font-size:13px;margin-bottom:16px}
+nav a{color:var(--line2)}nav a[aria-current]{color:var(--ink);font-weight:700}
+.cart{border:1.5px solid var(--ink);background:var(--sheet);display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.cart div{padding:8px 12px;border-right:.8px solid var(--rule);border-bottom:.8px solid var(--rule)}
+.cart b{display:block;font-family:var(--cond);letter-spacing:.08em;font-size:11px;color:var(--line2);font-weight:600;text-transform:uppercase}
+figure{margin:20px 0;background:var(--sheet);border:.8px solid var(--rule);padding:12px}
+.scroll{overflow-x:auto}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-family:var(--cond);letter-spacing:.08em;text-transform:uppercase;font-size:12px;color:var(--line2);margin-top:8px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--sheet)}
+th,td{border:.8px solid var(--rule);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-family:var(--cond);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+ol li{margin:4px 0}
+pre{background:var(--sheet);border:.8px solid var(--rule);padding:12px;overflow-x:auto}
+.tg{float:right;font:inherit;background:none;color:var(--ink);border:1px solid var(--line2);padding:6px 10px;min-height:44px;cursor:pointer}
+svg text{fill:var(--ink);font-family:var(--mono);paint-order:stroke;stroke:var(--sheet);stroke-width:3px;stroke-linejoin:round}
+svg text.cap{font-family:var(--cond);letter-spacing:.08em}
+.o{fill:none;stroke:var(--ink);stroke-width:1.5}
+.o2{fill:none;stroke:var(--ink);stroke-width:.8}
+.slot{fill:none;stroke:var(--line2);stroke-width:.9;stroke-dasharray:4 3}
+.ph{fill:none;stroke:var(--line3);stroke-width:.6}
+.dim{fill:none;stroke:var(--line2);stroke-width:.7}
+.ext{fill:none;stroke:var(--line3);stroke-width:.5}
+.cen{fill:none;stroke:var(--line3);stroke-width:.5;stroke-dasharray:10 2 2 2}
+.call{fill:none;stroke:var(--line2);stroke-width:.8;stroke-dasharray:2 2}
+.hatchf{fill:url(#hatch);stroke:var(--line2);stroke-width:.8;stroke-dasharray:4 3}
+.fill{fill:var(--sheet)}
+</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerUnits="userSpaceOnUse" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,1.8 L10,5 L0,8.2 z" fill="var(--line2)"/></marker>
+<marker id="tk" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="7" markerHeight="7" orient="auto"><path d="M2,8 L8,2" stroke="var(--line2)" stroke-width="1.2"/></marker>
+<pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="var(--line3)" stroke-width=".7"/></pattern>
+</defs></svg><div class="wrap">
+<button class="tg" type="button" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Clair / sombre</button>
+<nav><a href="index.html" aria-current="page">Sommaire</a><a href="flw-001.html">APP-FLW-001 · Parcours</a><a href="components.html">Composants</a><a href="scr-001.html">APP-SCR-001 · Mes créations</a><a href="scr-002.html">APP-SCR-002 · Choix du vêtement</a><a href="scr-003.html">APP-SCR-003 · Éditeur 3D</a><a href="scr-004.html">APP-SCR-004 · Export</a><a href="doc-001.html">APP-DOC-001 · Fiche PDF</a></nav><h1>Configurateur 3D — maquettes</h1>
+<div class="cart"><div><b>Projet</b>configurateur-3d</div><div><b>Phase</b>1 · maquettes</div><div><b>Statut</b>Proposition à valider</div><div><b>Date</b>28 oct. 2026</div></div>
+<h2>Brief</h2><pre>Nom :               [TBD]
+Plateforme :        web responsive (Next.js), ordinateur et mobile — cadres 390 px et 1440 px
+Rôles d'utilisateurs : un seul, le propriétaire (outil personnel, sans comptes)
+Fonctionnalités principales :
+  - choisir le vêtement (tee-shirt / sweater), la coupe (normale / oversize), la couleur du tissu
+  - ajouter logo, image, texte sur les zones devant / dos ; déplacer, redimensionner, pivoter (souris, doigt, champs en cm)
+  - calques : ordre, dupliquer, supprimer, masquer ; annuler / rétablir
+  - vue 3D : rotation, zoom, vues rapides face / dos / 3/4, fond clair / sombre
+  - contrôles : résolution, dépassement de zone, contraste, fond non transparent
+  - créations : sauvegarde auto (IndexedDB), liste, renommer, dupliquer, supprimer, import / export .json
+  - export ZIP : aperçus PNG, fiche de fabrication PDF A4, fichiers sources, .json
+Écrans déjà connus : mes créations, choix du vêtement, éditeur 3D, fenêtre d'export
+Parcours principaux : nouvelle création → éditeur → export ; rouvrir une création ; importer un .json
+Contraintes :
+  - interface en français, textes dans un fichier unique
+  - clavier partout, cibles tactiles ≥ 44 px, mouvement réduit respecté
+  - mobile : Android de milieu de gamme, 30 images/s minimum
+  - étiquette « Aperçu indicatif, les couleurs imprimées peuvent varier » toujours visible
+  - aucune valeur inventée : dimensions de zones, couleurs, polices = config/ ou [TBD]
+Points ouverts : voir index.html, section « À trancher »</pre>
+<h2>Inventaire des écrans</h2><div class="tw"><table><tr><th>ID</th><th>Écran</th><th>Ce qu’il permet</th><th>États</th></tr><tr><td>APP-SCR-001</td><td><a href="scr-001.html">Mes créations</a></td><td>Liste, ouvrir, renommer, dupliquer, supprimer, importer / exporter .json, nouvelle création</td><td>chargement, vide, liste, stockage indisponible, import refusé</td></tr><tr><td>APP-SCR-002</td><td><a href="scr-002.html">Choix du vêtement</a></td><td>Choisir type et coupe avant d’entrer dans l’éditeur</td><td>normal, modèle manquant</td></tr><tr><td>APP-SCR-003</td><td><a href="scr-003.html">Éditeur 3D</a></td><td>Vêtement, couleur, éléments, calques, manipulation, vues, contrôles qualité, annuler / rétablir</td><td>chargement, erreur de modèle, aucun élément, sélection image / texte, zone [TBD], fichier refusé</td></tr><tr><td>APP-SCR-004</td><td><a href="scr-004.html">Fenêtre d’export</a></td><td>Résumer le contenu du ZIP et le générer</td><td>prêt, génération, succès, erreur</td></tr><tr><td>APP-DOC-001</td><td><a href="doc-001.html">Fiche de fabrication PDF</a></td><td>Document produit pour l’atelier (pas un écran)</td><td>une page par zone</td></tr></table></div>
+<h2>Tokens proposés</h2><p>Valeurs proposées, à valider. Elles sont exportées dans <code>export/tokens.css</code> et <code>export/tailwind.theme.css</code>.</p>
+<div class="tw"><table><tr><th>Variable</th><th>Valeur</th><th>Note</th></tr><tr><td>S1</td><td>16</td><td></td></tr><tr><td>S2</td><td>8</td><td></td></tr><tr><td>S3</td><td>24</td><td></td></tr><tr><td>S4</td><td>12</td><td></td></tr><tr><td>S5</td><td>32</td><td></td></tr><tr><td>B</td><td>1</td><td></td></tr><tr><td>FOCUS_RING</td><td>2</td><td></td></tr><tr><td>FOCUS_OFFSET</td><td>2</td><td></td></tr><tr><td>R1</td><td>12</td><td></td></tr><tr><td>R2</td><td>R1 - B - S2 = 3</td><td></td></tr><tr><td>R_CTL</td><td>8</td><td></td></tr><tr><td>R_SEG_IN</td><td>R_CTL - B - P_SEG = 3</td><td></td></tr><tr><td>R_FOCUS</td><td>R_CTL + FOCUS_OFFSET + FOCUS_RING = 12</td><td></td></tr><tr><td>R_PILL</td><td>H_CHIP / 2 = 16</td><td></td></tr><tr><td>TOUCH_MIN</td><td>44</td><td>Imposé par le cahier des charges (section 12) : cibles tactiles d'au moins 44 px.</td></tr><tr><td>H_BTN</td><td>TOUCH_MIN = 44</td><td></td></tr><tr><td>H_FIELD</td><td>TOUCH_MIN = 44</td><td></td></tr><tr><td>H_SEG</td><td>TOUCH_MIN = 44</td><td></td></tr><tr><td>P_SEG</td><td>4</td><td></td></tr><tr><td>SWATCH</td><td>TOUCH_MIN = 44</td><td></td></tr><tr><td>H_CHIP</td><td>32</td><td></td></tr><tr><td>H_ROW</td><td>56</td><td>Ligne de calque : vignette 40 + 2 × S2.</td></tr><tr><td>THUMB_LAYER</td><td>40</td><td></td></tr><tr><td>H_TOPBAR</td><td>56</td><td></td></tr><tr><td>H_HANDLE</td><td>24</td><td></td></tr><tr><td>HANDLE_VIS</td><td>12</td><td>Poignée dessinée ; sa zone de toucher fait HANDLE_HIT.</td></tr><tr><td>HANDLE_HIT</td><td>TOUCH_MIN = 44</td><td></td></tr><tr><td>ROT_OFFSET</td><td>24</td><td></td></tr><tr><td>ICON</td><td>20</td><td></td></tr><tr><td>H_CARD_TYPE_M</td><td>200</td><td></td></tr><tr><td>H_CARD_TYPE_D</td><td>300</td><td></td></tr><tr><td>H_CARD_FIT</td><td>100</td><td></td></tr><tr><td>W_MOBILE</td><td>390</td><td></td></tr><tr><td>H_MOBILE</td><td>844</td><td></td></tr><tr><td>W_DESKTOP</td><td>1440</td><td></td></tr><tr><td>H_DESKTOP</td><td>900</td><td></td></tr><tr><td>BP_DESKTOP</td><td>1024</td><td></td></tr><tr><td>W_PANEL</td><td>320</td><td>Panneaux latéraux de l'éditeur sur ordinateur (≥ BP_DESKTOP).</td></tr><tr><td>W_MAX</td><td>1280</td><td></td></tr><tr><td>W_COL</td><td>800</td><td>Colonne centrale de l'écran « Choix du vêtement » sur ordinateur.</td></tr><tr><td>W_DIALOG</td><td>560</td><td></td></tr><tr><td>H_SHEET_PEEK</td><td>H_HANDLE + H_SEG + S1 = 84</td><td>Panneau bas mobile replié : poignée + onglets + marge.</td></tr><tr><td>H_SHEET_MID</td><td>360</td><td>Panneau bas mobile à mi-hauteur ; laisse 428 px à la scène sur un écran de 844.</td></tr><tr><td>COLS_MOBILE</td><td>4</td><td></td></tr><tr><td>COLS_DESKTOP</td><td>12</td><td></td></tr><tr><td>PDF_W</td><td>595</td><td></td></tr><tr><td>PDF_H</td><td>842</td><td></td></tr><tr><td>M_PDF</td><td>40</td><td>Marges de la fiche A4, en points PDF.</td></tr></table></div>
+<h2>Valeurs [TBD]</h2><ul><li>app.name</li><li>font.ui</li><li>color.ui (fond, encre, accent)</li><li>shadow.panel</li><li>motion.camera (durée, courbe)</li><li>colors.json (palette du tissu)</li><li>fonts.json (polices des textes)</li><li>print-zones.json (dimensions des 4 zones)</li><li>print.technique</li><li>quality.contrast_threshold</li></ul></div></body></html>
