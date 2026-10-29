@@ -3,6 +3,7 @@ import './globals.css';
 import { fr } from '@/i18n/fr';
 import { GlassDrops } from '@/features/editor/GlassDrops';
 import { Toast } from '@/features/editor/Toast';
+import { AuthListener } from '@/features/auth/session';
 
 export const metadata: Metadata = {
   title: { default: fr.appName, template: `%s · ${fr.appName}` },
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <GlassDrops />
         <Toast />
+        <AuthListener />
       </body>
     </html>
   );

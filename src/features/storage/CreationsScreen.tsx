@@ -13,6 +13,7 @@ import { designFileBlob, downloadBlob, importDesignFile, slug } from '@/features
 import { BrandMark, cx, glassButton, IconButton, WarningItem } from '@/features/editor/ui';
 import { Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
+import { AccountButton } from '@/features/auth/AccountButton';
 import { fr } from '@/i18n/fr';
 
 const GarmentPreview = dynamic(() => import('@/features/scene/GarmentPreview'), { ssr: false });
@@ -199,6 +200,7 @@ export default function CreationsScreen() {
             <IconButton className="desk:hidden" variant="outline" label={t.importJson} onClick={openImport}>
               <Icon name="upload" />
             </IconButton>
+            <AccountButton />
             <Link href="/new" className={cx('hidden h-h-btn items-center gap-s2 rounded-r-ctl px-s1 text-sm font-medium desk:inline-flex', glassButton.primary)}>
               <Icon name="plus" size={18} />
               {t.newDesign}
