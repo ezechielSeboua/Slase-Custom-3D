@@ -95,6 +95,7 @@ L'éditeur tient sur un seul écran : la scène 3D au centre, les réglages du v
 
 - Sauvegarde automatique dans le navigateur, liste des créations, renommer, dupliquer, supprimer.
 - Export et import d'une création en fichier `.json`, pour la sauvegarder ailleurs ou la transmettre.
+- À partir de 6 créations : recherche (nom et texte imprimé), filtres par vêtement, coupe et couleur, tri (voir section 16).
 
 ## 6. Zones d'impression et contrôles qualité
 
@@ -108,6 +109,8 @@ Les dimensions des zones dépendent de l'atelier et de sa technique d'impression
 | Dos, sweater | depuis le bas du col, sur l'axe central | `[TBD]` | `[TBD]` |
 
 Technique d'impression : `[TBD]` (sérigraphie, DTF, flex…). Tant que les valeurs manquent, l'app affiche la zone en pointillés avec la mention « dimensions à confirmer ».
+
+Décision du 29 octobre 2026 : les pointillés de la zone ne s'affichent que **pendant qu'un élément bouge** (glisser, redimensionner, tourner), et seulement pour la zone de cet élément. Au repos, ils sont masqués ; sur un lien partagé, ils ne s'affichent jamais. Ils restent absents des aperçus exportés et de la fiche.
 
 Contrôles automatiques, affichés en avertissement sans bloquer :
 
@@ -126,7 +129,8 @@ Un bouton « Exporter » produit un dossier ZIP qui contient tout ce dont l'atel
    - un schéma à plat de la zone avec chaque élément coté en **centimètres** : distance au bas du col, distance à l'axe central, largeur, hauteur, rotation ;
    - pour chaque élément : type, nom du fichier source, résolution effective en dpi, police et couleur pour un texte ;
    - les avertissements non résolus (section 6) ;
-   - la mention « Aperçu indicatif » et la date.
+   - la mention « Aperçu indicatif » et la date ;
+   - depuis le 29 octobre 2026 : le contenu réel de chaque élément dans le schéma, des pastilles numérotées (nom, dimensions, rotation, position), l'aperçu 3D du côté concerné, des échantillons de couleur, l'encombrement total, une barre d'échelle, un cadre « Notes de l'atelier · validation » et la référence de la création en pied de page (détail en section 16).
 3. **Fichiers sources** : chaque image importée dans sa résolution d'origine, et chaque texte rendu en PNG transparent à 300 dpi à sa taille d'impression.
 4. **La création en `.json`**, pour la rouvrir plus tard.
 
@@ -413,6 +417,13 @@ Décision du 29 octobre 2026 (remplace celle du 28 oct.) : **Google seulement**.
 5. **Partage par lien** en lecture seule.
 6. **Vérifications** : un compte ne voit jamais les données d'un autre, la synchronisation entre deux appareils, le hors ligne, le partage (lecture seule, lien désactivable), la page de mentions sur les données personnelles.
 
+### État d'avancement (29 octobre 2026)
+
+- **Étapes 1 à 5 : faites.** Base et règles d'accès (migrations `v2_designs_assets_storage` et `v2_shares`), connexion Google, « Mon compte », suppression du compte (fonction `delete-account`), synchronisation avec file hors ligne, reprise des créations locales, partage par lien (fonction `shared-design`), photo de profil.
+- **Étape 6 : à faire**, une fois la connexion Google branchée dans le tableau de bord Supabase : tests à deux appareils, hors ligne, partage de bout en bout, rendu de « Mon compte » sur téléphone.
+- **Réglages à faire dans les tableaux de bord** : identifiant OAuth Google, désactivation de la connexion par e-mail, adresses autorisées (développement et production).
+- **Limites connues** : les images qui ne servent plus restent sur le serveur (pas encore de nettoyage) ; un même fichier `.json` importé dans deux comptes reste bloqué en erreur de synchronisation dans le second ; à la déconnexion, les créations du compte restent stockées dans le navigateur, masquées mais pas effacées.
+
 ### Données personnelles
 
 Décision du 29 octobre 2026 : les données (créations, images, miniatures) sont conservées **tant que le compte existe**. La suppression du compte efface définitivement ses lignes et tous ses fichiers dans Storage. Elle passe par la fonction Supabase `delete-account` (source dans `supabase/functions/`), seule à utiliser la clé d'administration ; les créations encore présentes dans le navigateur n'y sont pas touchées. Le texte des mentions (RGPD et loi ivoirienne sur les données à caractère personnel) reste `[TBD]`.
@@ -437,3 +448,51 @@ Décision du 29 octobre 2026 :
 - **Contrainte « aucune donnée envoyée à un serveur »** (section 12) : levée pour la V2. Les images quittent désormais l'appareil, ce qui doit être annoncé clairement à l'utilisateur.
 
 Le panier, le paiement et les commandes restent hors périmètre de la V2.
+
+## 16. Évolutions du 29 octobre 2026 : ergonomie, fiche, accueil, identité
+
+Décidées et livrées en cours de V2, sur la branche `dev`.
+
+### Ergonomie mobile
+
+- **Éditeur** : panneau du bas limité à 46 % de l'écran, scène qui s'agrandit quand le panneau est réduit, poignée de 44 px qu'on peut glisser, bandeau d'aperçu court, bouton « Modèle 3D » posé sur la scène, emplacements en rangée défilante, chaque onglet qui repart du haut.
+- **Menus** : sur mobile, les menus (compte, cartes, calques, filtres, tri) s'ouvrent en feuille d'actions opaque en bas de l'écran ; la page est bloquée derrière, comme sous les fenêtres. Sur ordinateur, listes déroulantes opaques.
+- **Cibles tactiles** : au moins 40 px pour les choix à onglets, 44 px pour les boutons ; libellés d'au moins 12 px.
+
+### Fiche de fabrication
+
+- **Schéma** : le contenu réel de chaque élément (image d'origine, texte dans sa police et sa couleur), à l'échelle et tourné, sur une zone à la couleur du tissu ; traits en gris clair sur un tissu foncé.
+- **Pastilles numérotées** hors de la zone, reliées à chaque élément : nom, largeur × hauteur, rotation, position X et Y.
+- **Colonne de droite** : aperçu 3D du côté concerné, échantillon et nom du tissu, encombrement total de la zone, barre d'échelle de 10 cm.
+- **Tableau** : ligne de titre sur fond gris, échantillon de la couleur de chaque texte.
+- **Bas de page** : cadre « Notes de l'atelier · validation » (bon à tirer, nom, signature) quand la place le permet, référence de la création (8 premiers caractères de son identifiant), date et numéro de page.
+
+### Placement
+
+- **Aimant avec taille** : un élément lâché sur un emplacement standard prend la largeur et la rotation proposées par `config/placements.json` (comme quand on le choisit dans le panneau). Il reprend sa taille de départ s'il quitte l'emplacement sans y être lâché.
+
+### Accueil (« Mes créations »)
+
+- **En-tête** : la marque, « Nouvelle création » et le compte. « Importer .json » passe dans le menu ⋯ à côté du titre.
+- **Recherche et tri**, sous le titre, à partir de 6 créations, sans rester fixe au défilement : recherche sur le nom et le texte imprimé (sans accents ni majuscules) ; filtres séparés Vêtement, Coupe, Couleur, avec seulement les valeurs présentes ; tri par date ou par nom, gardé dans le navigateur ; compteur « 4 sur 12 » et message quand rien ne correspond.
+- **Synchronisation** : pastille sur la photo de profil (enregistré, en cours, hors ligne ou erreur) et état détaillé dans le menu du compte.
+
+### Compte
+
+- **Connexion** : trois avantages illustrés, note sur les données envoyées en ligne, bouton Google avec indicateur de chargement.
+- **« Mon compte »** : profil (photo, nom, adresse, « Connecté avec Google »), synchronisation (nombre de créations, dernière synchronisation, « Synchroniser maintenant »), liens partagés (copier, désactiver), téléchargement de toutes les créations en `.zip`, zone sensible pour la suppression.
+
+### Identité
+
+- **Logo** : nouvel emblème Slase (S dans un anneau), dans `public/brand/slase-emblem.png` ; il remplace le logo SLASE et l'icône « S » dans l'en-tête, les icônes Android et iPhone et l'icône d'onglet. Le nom « Slase Custom 3D » est écrit à côté de l'emblème.
+- **Couleur d'accent** : alignée sur l'anneau de l'emblème, `#3caac1` ; version foncée `#287180` pour le texte et le focus (dans `src/app/globals.css`).
+- **Sobriété** : pas de bordure ni de couleur ajoutée pour signaler un état (filtre actif, choix) ; l'accent reste réservé à l'action principale et aux éléments déjà prévus.
+
+### Points ouverts
+
+- **Partager** n'est proposé que depuis la liste « Mes créations », pas depuis l'éditeur.
+- **Nombre d'ouvertures d'un lien partagé** : pas de limite.
+- **Tri sur mobile** : avec plusieurs filtres actifs, le bouton de tri sort de l'écran à droite de la rangée (on le retrouve en la faisant défiler).
+- **Zones étendues** : le dessus des épaules et le tour complet des manches demanderaient une nouvelle zone « épaule » ou une projection qui suit le patron du tissu ; à décider avec l'atelier (technique d'impression).
+- **Mentions sur les données personnelles** : texte `[TBD]`.
+- **Catalogue public d'un utilisateur** : écarté pour l'instant.

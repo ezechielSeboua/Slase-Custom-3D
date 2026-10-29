@@ -137,6 +137,7 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
   const background = useDesign((s) => s.background);
   // Un glisser ou un redimensionnement est en cours.
   const dragging = useDesign((s) => s.gestureStart !== null);
+  const readOnly = useDesign((s) => s.readOnly);
   const [, setTick] = useState(0);
 
   const bases = useMemo(
@@ -173,7 +174,8 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
     return () => c.removeEventListener('end', onEnd);
   }, [controls]);
 
-  const drag = useRef<{ id: string; zone: ZoneId; dx: number; dy: number } | null>(null);
+  // w0, r0 : taille et rotation au début du glisser, rendues si l'élément quitte un emplacement sans y être lâché.
+  const drag = useRef<{ id: string; zone: ZoneId; dx: number; dy: number; w0: number; r0: number } | null>(null);
 
   const onDecalDown = (e: ThreeEvent<PointerEvent>) => {
     // Lecture seule : le geste fait tourner la vue, comme sur le tissu.
@@ -189,7 +191,7 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
     const p = pointerToPlane(bases[el.zone], camera, gl.domElement, e.clientX, e.clientY);
     if (!p) return;
     const c = planeToCm(bases[el.zone], p);
-    drag.current = { id, zone: el.zone, dx: el.x_cm - c.x, dy: el.y_cm - c.y };
+    drag.current = { id, zone: el.zone, dx: el.x_cm - c.x, dy: el.y_cm - c.y, w0: el.width_cm, r0: el.rotation_deg };
     setControlsEnabled(controls, false);
     beginGesture();
     const move = (ev: PointerEvent) => {
@@ -199,19 +201,22 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
       if (!q) return;
       const cm = planeToCm(bases[d.zone], q);
       const x = cm.x + d.dx, y = cm.y + d.dy;
-      // Aimant : près d'un emplacement de la zone, l'élément s'y cale.
+      // Aimant : près d'un emplacement de la zone, l'élément s'y cale et prend la taille (et la rotation)
+      // proposées, comme quand on le choisit dans le panneau. Le centre est calculé à cette taille-là.
       const cur = useDesign.getState().design;
       const el = cur?.elements.find((e) => e.id === d.id);
       if (cur && el) {
         for (const p of placementsFor(cur.garment, d.zone)) {
-          const c = placementCenter(p, el, cur.garment, cur.fit);
+          const fitted = { ...el, width_cm: p.width_cm, rotation_deg: p.rotation_deg ?? 0 } as DesignElement;
+          const c = placementCenter(p, fitted, cur.garment, cur.fit);
           if (Math.hypot(x - c.x, y - c.y) < SNAP_CM) {
-            liveElement(d.id, { x_cm: c.x, y_cm: c.y, placement: p.id });
+            liveElement(d.id, { x_cm: c.x, y_cm: c.y, placement: p.id, width_cm: fitted.width_cm, rotation_deg: fitted.rotation_deg });
             return;
           }
         }
       }
-      liveElement(d.id, { x_cm: Math.round(x * 100) / 100, y_cm: Math.round(y * 100) / 100 });
+      // Hors d'un emplacement : position libre, à la taille de départ.
+      liveElement(d.id, { x_cm: Math.round(x * 100) / 100, y_cm: Math.round(y * 100) / 100, width_cm: d.w0, rotation_deg: d.r0 });
     };
     const up = () => {
       drag.current = null;
@@ -242,18 +247,18 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
           </>,
           fabric,
         )}
-      {fabric &&
-        ZONE_IDS.map((zone) => (
-          <ZoneFrame
-            key={zone}
-            mesh={fabric}
-            basis={bases[zone]}
-            zone={zone}
-            garment={design}
-            active={selected?.zone === zone}
-            dark={background === 'dark'}
-          />
-        ))}
+      {/* Limite de la zone : seulement pendant qu'un élément bouge (glisser, redimensionner, tourner), et jamais
+          en lecture seule (lien partagé). Une seule zone, celle de l'élément : il ne peut pas en sortir. */}
+      {fabric && selected && dragging && !readOnly && (
+        <ZoneFrame
+          mesh={fabric}
+          basis={bases[selected.zone]}
+          zone={selected.zone}
+          garment={design}
+          active
+          dark={background === 'dark'}
+        />
+      )}
       {fabric && selected && !selected.hidden && <Handles el={selected} mesh={fabric} basis={bases[selected.zone]} />}
       {fabric && selected && dragging && (
         <PlacementGuides mesh={fabric} basis={bases[selected.zone]} el={selected} design={design} dark={background === 'dark'} />
