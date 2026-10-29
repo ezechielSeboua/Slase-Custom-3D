@@ -4,7 +4,8 @@
 type IconName =
   | 'back' | 'undo' | 'redo' | 'download' | 'cube' | 'eye' | 'eyeOff' | 'more' | 'close' | 'image' | 'text'
   | 'plus' | 'warning' | 'info' | 'chevronDown' | 'grip' | 'upload' | 'sun' | 'moon' | 'lock' | 'alignLeft'
-  | 'alignCenter' | 'alignRight' | 'trash' | 'copy' | 'pencil' | 'arrowUp' | 'arrowDown' | 'user' | 'logout' | 'mail' | 'share' | 'devices' | 'cloud' | 'refresh';
+  | 'alignCenter' | 'alignRight' | 'trash' | 'copy' | 'pencil' | 'arrowUp' | 'arrowDown' | 'user' | 'logout' | 'mail' | 'share' | 'devices' | 'cloud' | 'refresh'
+  | 'search' | 'check' | 'sort';
 
 const PATHS: Record<IconName, React.ReactNode> = {
   back: <path d="M15 5l-7 7 7 7" />,
@@ -40,6 +41,9 @@ const PATHS: Record<IconName, React.ReactNode> = {
   mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
   devices: <><rect x="2" y="5" width="14" height="10" rx="1.5" /><path d="M5 19h8" /><rect x="17" y="8" width="5" height="11" rx="1" /></>,
   cloud: <><path d="M7 18a4.5 4.5 0 01-.6-9A6 6 0 0118 10a4 4 0 01-.5 8z" /><path d="M9.5 13.5l2 2 3.5-3.5" /></>,
+  search: <><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  sort: <><path d="M7 4v16" /><path d="M3.5 16.5L7 20l3.5-3.5" /><path d="M17 20V4" /><path d="M13.5 7.5L17 4l3.5 3.5" /></>,
   refresh: <><path d="M20 11a8 8 0 00-14.6-4.5L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0014.6 4.5L20 16" /><path d="M20 20v-4h-4" /></>,
   share: <><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.4" /><path d="M8.2 13.2l7.6 4.4" /></>,
 };

@@ -9,6 +9,7 @@ import { useIsDesktop } from '@/lib/useMedia';
 import { Icon } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { AvatarImage } from '@/features/auth/AvatarImage';
+import { useSync } from '@/features/storage/sync';
 import { fr } from '@/i18n/fr';
 
 const t = fr.auth;
@@ -17,6 +18,7 @@ const t = fr.auth;
 export function AccountButton() {
   const router = useRouter();
   const { status, user } = useAuth();
+  const { status: sync, lastSynced } = useSync();
   const [open, setOpen] = useState(false);
   const desktop = useIsDesktop();
   const ref = useRef<HTMLDivElement>(null);
@@ -54,6 +56,17 @@ export function AccountButton() {
   }
 
   const email = user.email ?? '';
+  const syncText =
+    sync === 'off'
+      ? ''
+      : sync === 'synced' && lastSynced
+        ? t.lastSynced(new Date(lastSynced).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }))
+        : fr.list.sync[sync];
+  const syncLine = syncText && (
+    <p role="status" className={cx('px-s1 pb-s2 text-xs', sync === 'offline' || sync === 'error' ? 'text-warn' : 'text-muted')}>
+      {syncText}
+    </p>
+  );
   const items = (
     <>
       <Link href="/compte" role="menuitem" onClick={() => setOpen(false)} className={menuItemClass}>
@@ -80,7 +93,7 @@ export function AccountButton() {
     <div ref={ref} className="relative">
       <IconButton
         variant="outline"
-        label={t.accountMenu(email)}
+        label={syncText ? `${t.accountMenu(email)} · ${syncText}` : t.accountMenu(email)}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
@@ -88,14 +101,28 @@ export function AccountButton() {
       >
         <AvatarImage initial={email.charAt(0)} className="size-full" />
       </IconButton>
+      {/* Pastille de synchronisation, visible partout : turquoise enregistré (pulsé pendant l'envoi), brune hors ligne ou en erreur. */}
+      {sync !== 'off' && (
+        <span
+          aria-hidden="true"
+          className={cx(
+            'pointer-events-none absolute right-0 bottom-0 size-3 rounded-full border-2 border-surface',
+            sync === 'synced' && 'bg-select-strong',
+            sync === 'syncing' && 'animate-pulse bg-select motion-reduce:animate-none',
+            (sync === 'offline' || sync === 'error') && 'bg-warn',
+          )}
+        />
+      )}
       {open && desktop && (
         <div role="menu" className={cx('absolute right-0 z-30 mt-1 w-64', menuSurfaceClass)}>
-          <p className="truncate px-s1 pb-s2 text-xs text-muted">{email}</p>
+          <p className="truncate px-s1 pb-1 text-xs text-muted">{email}</p>
+          {syncLine}
           {items}
         </div>
       )}
       {open && !desktop && (
         <ActionSheet title={email} onClose={() => setOpen(false)}>
+          <div className="pt-s2">{syncLine}</div>
           {items}
         </ActionSheet>
       )}

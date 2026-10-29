@@ -4,8 +4,6 @@ export const fr = {
   // Là où la place manque : nom sous l'icône de l'écran d'accueil, en-tête mobile.
   appShortName: 'Slase Custom',
   appTagline: 'Personnalisez votre tee-shirt en 3D',
-  // Partie du nom écrite à côté du logo SLASE.
-  appNameSuffix: 'Custom 3D',
   appTitle: 'Slase Custom 3D',
   previewNotice: 'Aperçu indicatif, les couleurs imprimées peuvent varier',
   // Petits écrans : une ligne, pour laisser la place au vêtement.
@@ -61,6 +59,18 @@ export const fr = {
     storageUnavailable: 'Le stockage du navigateur est indisponible : les créations ne seront pas gardées.',
     importError: 'Fichier .json invalide : rien n’a été modifié.',
     imported: 'Création importée.',
+    search: 'Rechercher une création…',
+    searchLabel: 'Rechercher par nom ou par texte imprimé',
+    filterGarment: 'Vêtement',
+    filterFit: 'Coupe',
+    filterColor: 'Couleur',
+    clearFilter: 'Retirer le filtre',
+    clearAll: 'Effacer les filtres',
+    sort: 'Trier',
+    sorts: { recent: 'Plus récentes', oldest: 'Plus anciennes', name: 'Nom (A → Z)' },
+    countOf: (n: number, total: number) => `${n} sur ${total}`,
+    noMatch: 'Aucune création ne correspond à votre recherche.',
+    listMenu: 'Plus d’options',
     sync: {
       syncing: 'Synchronisation…',
       synced: 'Enregistré dans votre compte',

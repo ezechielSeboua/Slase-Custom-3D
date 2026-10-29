@@ -16,8 +16,9 @@ import { useAuth } from '@/features/auth/session';
 import { ShareDialog } from '@/features/storage/ShareDialog';
 import { designFileBlob, downloadBlob, importDesignFile, slug } from '@/features/storage/json';
 import {
-  ActionSheet, BrandMark, Button, cx, glassButton, IconButton, menuItemClass, menuSurfaceClass, Spinner, WarningItem,
+  ActionMenu, ActionSheet, BrandMark, Button, cx, glassButton, IconButton, menuItemClass, menuSurfaceClass, Spinner, WarningItem,
 } from '@/features/editor/ui';
+import { applyFilters, hasFilters, ListToolbar, NO_FILTERS, TOOLBAR_MIN_DESIGNS, useListFilters } from '@/features/storage/ListToolbar';
 import { Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { AccountButton } from '@/features/auth/AccountButton';
@@ -206,6 +207,7 @@ export default function CreationsScreen() {
   const fileRef = useRef<HTMLInputElement>(null);
   const signedIn = useAuth((s) => s.status === 'signedIn');
   const { status: syncStatus, revision, pulled } = useSync();
+  const { filters, update } = useListFilters();
 
   const refresh = useCallback(async () => {
     try {
@@ -265,24 +267,24 @@ export default function CreationsScreen() {
 
   const openImport = () => fileRef.current?.click();
 
+  // Recherche et filtres : seulement quand la section est affichée (à partir de TOOLBAR_MIN_DESIGNS créations).
+  const toolbar = (designs?.length ?? 0) >= TOOLBAR_MIN_DESIGNS;
+  const active = toolbar ? filters : NO_FILTERS;
+  const filtering = hasFilters(active);
+  const shown = designs ? applyFilters(designs, active) : [];
+
   return (
     <div className="min-h-dvh pb-28 desk:pb-s5">
       <header className="sticky top-0 z-10 border-b border-white/70 bg-white/55 backdrop-blur-xl">
         <div className="mx-auto flex h-h-topbar max-w-w-max items-center justify-between gap-s4 px-safe">
           <BrandMark />
+          {/* L'essentiel seulement : l'action principale et le compte. « Importer .json » est dans le menu ⋯ du titre. */}
           <div className="flex items-center gap-s4">
-            <button type="button" onClick={openImport} className={cx('inline-flex h-h-btn items-center gap-s2 rounded-r-ctl px-s1 text-sm font-medium max-desk:hidden', glassButton.secondary)}>
-              <Icon name="upload" size={18} />
-              {t.importJson}
-            </button>
-            <IconButton className="desk:hidden" variant="outline" label={t.importJson} onClick={openImport}>
-              <Icon name="upload" />
-            </IconButton>
-            <AccountButton />
             <Link href="/new" className={cx('hidden h-h-btn items-center gap-s2 rounded-r-ctl px-s1 text-sm font-medium desk:inline-flex', glassButton.primary)}>
               <Icon name="plus" size={18} />
               {t.newDesign}
             </Link>
+            <AccountButton />
           </div>
         </div>
       </header>
@@ -318,12 +320,23 @@ export default function CreationsScreen() {
           <Welcome onImport={openImport} />
         ) : (
           <>
-            <div className="mb-s1 flex flex-wrap items-baseline justify-between gap-x-s1 gap-y-1 desk:mb-s3">
+            <div className="mb-s1 flex flex-wrap items-center justify-between gap-x-s1 gap-y-1 desk:mb-s3">
               <h1 className="text-2xl font-semibold">
-                {t.title} <span className="text-base font-normal text-muted">{designs.length}</span>
+                {t.title}{' '}
+                <span className="text-base font-normal text-muted">{filtering ? t.countOf(shown.length, designs.length) : designs.length}</span>
               </h1>
-              {signedIn && <SyncBadge status={syncStatus} />}
+              <div className="flex items-center gap-s2">
+                {signedIn && <SyncBadge status={syncStatus} />}
+                <ActionMenu label={t.listMenu} title={t.title} items={[{ icon: 'upload', label: t.importJson, onSelect: openImport }]} />
+              </div>
             </div>
+            {toolbar && <ListToolbar designs={designs} filters={filters} update={update} />}
+            {filtering && shown.length === 0 && (
+              <div className="glass mb-s1 flex flex-col items-start gap-s4 rounded-r1 p-s3 desk:mb-s3" role="status">
+                <p className="text-sm">{t.noMatch}</p>
+                <Button onClick={() => update({ q: '', garment: null, fit: null, color: null })}>{t.clearAll}</Button>
+              </div>
+            )}
             <ul className="grid grid-cols-2 gap-s4 desk:grid-cols-4 desk:gap-s3">
               <li>
                 <Link
@@ -336,7 +349,7 @@ export default function CreationsScreen() {
                   <span className="font-medium">{t.newDesign}</span>
                 </Link>
               </li>
-              {designs.map((d) => {
+              {shown.map((d) => {
                 const color = colorById(d.color);
                 return (
                   <li key={d.id} className="glass group rounded-r1 p-s2">
@@ -372,7 +385,7 @@ export default function CreationsScreen() {
                             }}
                           />
                         ) : (
-                          <Link href={`/editor?id=${d.id}`} className="line-clamp-2 text-sm font-semibold break-words">
+                          <Link href={`/editor?id=${d.id}`} className="line-clamp-2 text-sm font-semibold wrap-break-word">
                             {d.name || t.untitled}
                           </Link>
                         )}

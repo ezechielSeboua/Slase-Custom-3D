@@ -8,9 +8,11 @@
   --color-ink: #1b1e22;
   --color-muted: #5d636a;
   --color-line: #c4c9ce;
-  /* Accent de marque (turquoise du logo SLASE). Pour revenir au noir et gris : --color-select: #1b1e22 et --color-on-select: #ffffff. */
-  --color-select: #26d4df;
-  --color-select-strong: #0e9aa6;
+  /* Accent de marque : bleu de l'anneau de l'emblème Slase (public/brand/slase-emblem.png).
+     -strong : même teinte, plus foncée, pour le texte et le focus (contraste 5,6 sur blanc) ;
+     on-select : texte posé sur l'accent (contraste 6,1). Pour revenir au noir et gris : --color-select: #1b1e22 et --color-on-select: #ffffff. */
+  --color-select: #3caac1;
+  --color-select-strong: #287180;
   --color-on-select: #0d2124;
   --color-warn: #7a4b00;
   --color-warn-bg: #fff6e0;

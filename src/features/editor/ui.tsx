@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Icon } from '@/features/editor/icons';
+import { Icon, type IconName } from '@/features/editor/icons';
+import { useIsDesktop } from '@/lib/useMedia';
 import { fr } from '@/i18n/fr';
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ');
@@ -294,7 +295,9 @@ export function ActionSheet({ title, onClose, children }: { title?: string; onCl
   useScrollLock();
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    // Le choix en cours s'il y en a un (menu de choix), sinon la première ligne.
+    const items = ref.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? ref.current?.querySelector<HTMLElement>('[role^="menuitem"]');
+    items?.focus();
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
     return () => {
@@ -310,6 +313,146 @@ export function ActionSheet({ title, onClose, children }: { title?: string; onCl
       </div>
     </div>,
     document.body,
+  );
+}
+
+/** Ouvre une liste déroulante (ordinateur) ou une feuille d'actions (mobile) ; un clic ailleurs la ferme. */
+function useMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const desktop = useIsDesktop();
+  useEffect(() => {
+    if (!open || !desktop) return;
+    const close = (e: Event) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', esc);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', esc);
+    };
+  }, [open, desktop]);
+  return { open, setOpen, ref, desktop };
+}
+
+export interface Choice<T extends string> {
+  value: T;
+  label: string;
+  /** Couleur montrée en pastille devant le libellé (couleur du tissu). */
+  swatch?: string;
+}
+
+/**
+ * Bouton « Critère ▾ » qui ouvre une liste de choix. Une valeur choisie s'affiche dans le bouton
+ * (« Coupe : Oversize ») ; `onClear` ajoute une croix pour la retirer.
+ */
+export function ChoiceMenu<T extends string>({
+  label, value, options, onChange, onClear, clearLabel, icon, compactLabel,
+}: {
+  label: string;
+  value: T | null;
+  options: Choice<T>[];
+  onChange: (v: T) => void;
+  onClear?: () => void;
+  clearLabel?: string;
+  icon?: IconName;
+  /** Libellé court du bouton sur mobile (ex. une icône seule pour le tri). */
+  compactLabel?: boolean;
+}) {
+  const { open, setOpen, ref, desktop } = useMenu();
+  const current = options.find((o) => o.value === value);
+  const active = Boolean(current && onClear);
+  const items = options.map((o) => (
+    <button
+      key={o.value}
+      type="button"
+      role="menuitemradio"
+      aria-checked={o.value === value}
+      onClick={() => {
+        setOpen(false);
+        onChange(o.value);
+      }}
+      className={menuItemClass}
+    >
+      {o.swatch ? (
+        <span aria-hidden="true" className="size-4 shrink-0 rounded-full border border-ink/30" style={{ background: o.swatch }} />
+      ) : null}
+      <span className="flex-1">{o.label}</span>
+      {o.value === value && <Icon name="check" size={18} />}
+    </button>
+  ));
+  return (
+    <div ref={ref} className="relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={compactLabel && !desktop ? `${label} : ${current?.label ?? ''}` : undefined}
+        onClick={() => setOpen((o) => !o)}
+        className={cx(
+          'inline-flex h-h-btn items-center gap-s2 rounded-r-ctl px-s4 text-sm whitespace-nowrap',
+          glassButton.secondary,
+          active && 'font-semibold',
+          active && onClear && 'rounded-e-none',
+        )}
+      >
+        {icon && <Icon name={icon} size={18} />}
+        {!(compactLabel && !desktop) && <span>{current && (active || compactLabel) ? `${label} : ${current.label}` : label}</span>}
+        {!active && !(compactLabel && !desktop) && <Icon name="chevronDown" size={16} />}
+      </button>
+      {active && onClear && (
+        <button
+          type="button"
+          aria-label={`${clearLabel ?? fr.common.close} : ${label}`}
+          title={clearLabel}
+          onClick={onClear}
+          className={cx('inline-flex h-h-btn w-10 items-center justify-center rounded-r-ctl rounded-s-none border-l border-line', glassButton.secondary)}
+        >
+          <Icon name="close" size={16} />
+        </button>
+      )}
+      {open && desktop && (
+        <div role="menu" aria-label={label} className={cx('absolute top-full left-0 z-30 mt-1 min-w-52', menuSurfaceClass)}>
+          {items}
+        </div>
+      )}
+      {open && !desktop && (
+        <ActionSheet title={label} onClose={() => setOpen(false)}>
+          {items}
+        </ActionSheet>
+      )}
+    </div>
+  );
+}
+
+/** Bouton ⋯ qui ouvre une courte liste d'actions (liste déroulante ou feuille d'actions). */
+export function ActionMenu({ label, title, items }: { label: string; title?: string; items: { icon: IconName; label: string; onSelect: () => void }[] }) {
+  const { open, setOpen, ref, desktop } = useMenu();
+  const rows = items.map((it) => (
+    <button
+      key={it.label}
+      type="button"
+      role="menuitem"
+      className={menuItemClass}
+      onClick={() => {
+        setOpen(false);
+        it.onSelect();
+      }}
+    >
+      <Icon name={it.icon} size={desktop ? 18 : 20} />
+      {it.label}
+    </button>
+  ));
+  return (
+    <div ref={ref} className="relative">
+      <IconButton label={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <Icon name="more" />
+      </IconButton>
+      {open && desktop && <div role="menu" className={cx('absolute top-full right-0 z-30 mt-1 w-56', menuSurfaceClass)}>{rows}</div>}
+      {open && !desktop && <ActionSheet title={title} onClose={() => setOpen(false)}>{rows}</ActionSheet>}
+    </div>
   );
 }
 
@@ -395,18 +538,16 @@ export function PageLoader({ label = 'Chargement…' }: { label?: string }) {
 }
 
 /**
- * Logo SLASE (dégradé clair, conçu pour un fond sombre) dans une pastille de verre fumé, suivi de « Custom 3D ».
+ * Emblème Slase (S dans un anneau, fond transparent), suivi du nom de l'app : l'emblème ne porte pas de texte.
  * Le nom complet reste lisible par les lecteurs d'écran.
  */
 export function BrandMark({ compact }: { compact?: boolean }) {
   return (
     <span className="inline-flex items-center gap-s2" aria-label={fr.appName} role="img">
-      <span className="glass-dark inline-flex h-8 items-center rounded-r-ctl px-s2" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/slase-logo.png" alt="" className="h-4 w-auto" />
-      </span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/slase-emblem.png" alt="" aria-hidden="true" className="size-8 object-contain" />
       <span aria-hidden="true" className={cx('font-semibold tracking-tight', compact && 'max-desk:hidden')}>
-        {fr.appNameSuffix}
+        {fr.appName}
       </span>
     </span>
   );
