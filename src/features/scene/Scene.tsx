@@ -149,7 +149,8 @@ export default function Scene() {
   }, [model]);
 
   return (
-    <div className="absolute inset-0" style={{ background: SCENE_BG[background] }}>
+    // `isolate` : les poignées (HTML posé sur la scène) restent sous le panneau mobile et la surcouche.
+    <div className="absolute inset-0 isolate" style={{ background: SCENE_BG[background] }}>
       <Canvas
         flat
         frameloop="demand"

@@ -8,6 +8,8 @@ export const fr = {
   appNameSuffix: 'Custom 3D',
   appTitle: 'Slase Custom 3D',
   previewNotice: 'Aperçu indicatif, les couleurs imprimées peuvent varier',
+  // Petits écrans : une ligne, pour laisser la place au vêtement.
+  previewNoticeShort: 'Aperçu indicatif des couleurs',
   tbd: '[TBD]',
   provisional: 'provisoire',
   common: {

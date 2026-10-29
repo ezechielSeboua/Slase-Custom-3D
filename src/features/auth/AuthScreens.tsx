@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getSupabase } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/supabase/config';
 import { authErrorMessage, deleteAccount, signOut, useAuth } from '@/features/auth/session';
-import { backLinkClass, BrandMark, Button, Dialog, PageLoader, Spinner, WarningItem } from '@/features/editor/ui';
+import { backLinkClass, BrandMark, Button, cx, Dialog, glassButton, PageLoader, Spinner, WarningItem } from '@/features/editor/ui';
 import { GoogleLogo, Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { forgetAccount } from '@/features/storage/db';
@@ -104,11 +104,9 @@ export function SignInScreen() {
       <GoogleButton next={next} onError={setError} />
       {error && <WarningItem>{error}</WarningItem>}
       <p className="text-xs text-muted">{t.dataNotice}</p>
-      <p className="text-center">
-        <Link href="/" className="text-sm text-muted underline">
-          {t.continueWithout}
-        </Link>
-      </p>
+      <Link href="/" className={cx('flex h-h-btn items-center justify-center rounded-r-ctl text-sm font-medium', glassButton.secondary)}>
+        {t.continueWithout}
+      </Link>
     </AuthLayout>
   );
 }

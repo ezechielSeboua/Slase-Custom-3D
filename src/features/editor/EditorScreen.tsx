@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { getGarmentModel } from '@/lib/config';
 import {
   deleteElement, loadDesign, redo, select, setBackground, setName, undo, unloadDesign, useDesign,
@@ -89,8 +89,11 @@ function useShortcuts() {
   }, []);
 }
 
-/** Télécharge le tee-shirt personnalisé en .glb, sans passer par la fenêtre d'export. */
-function GlbButton() {
+/**
+ * Télécharge le tee-shirt personnalisé en .glb, sans passer par la fenêtre d'export.
+ * `bar` : bouton avec libellé, dans la barre du haut (ordinateur) ; `overlay` : icône posée sur la scène (mobile).
+ */
+function GlbButton({ place }: { place: 'bar' | 'overlay' }) {
   const status = useScene((s) => s.status);
   const [busy, setBusy] = useState(false);
   // iPhone / iPad : le GLB ne s'ouvre pas nativement ; on propose la réalité augmentée (USDZ + Quick Look).
@@ -116,16 +119,18 @@ function GlbButton() {
   };
   const disabled = busy || status !== 'ready';
   const label = ar ? fr.export.arLabel : fr.export.glbDownloadLabel;
-  return (
-    <>
+  if (place === 'bar') {
+    return (
       <Button className="max-desk:hidden" onClick={run} disabled={disabled} busy={busy} title={label}>
         {!busy && <Icon name="cube" size={18} />}
         {ar ? fr.export.ar : fr.export.glbDownload}
       </Button>
-      <IconButton className="desk:hidden" variant="outline" label={label} onClick={run} disabled={disabled}>
-        {busy ? <Spinner size={18} /> : <Icon name="cube" />}
-      </IconButton>
-    </>
+    );
+  }
+  return (
+    <IconButton variant="outline" label={label} onClick={run} disabled={disabled}>
+      {busy ? <Spinner size={18} /> : <Icon name="cube" />}
+    </IconButton>
   );
 }
 
@@ -146,7 +151,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
       />
       <IconButton label={t.undo} onClick={undo} disabled={!canUndo}><Icon name="undo" /></IconButton>
       <IconButton label={t.redo} onClick={redo} disabled={!canRedo}><Icon name="redo" /></IconButton>
-      <GlbButton />
+      <GlbButton place="bar" />
       <Button variant="primary" className="max-desk:hidden" onClick={onExport}>
         <Icon name="download" size={18} />
         {t.export}
@@ -175,8 +180,11 @@ function BackgroundToggle() {
   );
 }
 
-/** Bandeau d'aperçu, fond, chargement et vues rapides ; repris tel quel par la page de partage. */
-export function SceneOverlay() {
+/**
+ * Bandeau d'aperçu, fond, chargement et vues rapides ; repris tel quel par la page de partage.
+ * `actions` : boutons ajoutés sous le choix du fond (éditeur mobile).
+ */
+export function SceneOverlay({ actions }: { actions?: React.ReactNode }) {
   const status = useScene((s) => s.status);
   const view = useScene((s) => s.view.id);
   const design = useDesign((s) => s.design)!;
@@ -184,12 +192,14 @@ export function SceneOverlay() {
   return (
     <>
       <div className="pointer-events-none absolute inset-x-s1 top-s1 flex flex-col items-start gap-s2 pr-14">
-        <PreviewBadge text={fr.previewNotice} />
+        <span className="max-desk:hidden"><PreviewBadge text={fr.previewNotice} /></span>
+        <span className="desk:hidden"><PreviewBadge text={fr.previewNoticeShort} /></span>
         {model?.provisional && <span className="glass rounded-r-pill px-s2 text-xs text-muted">{t.provisionalModel}</span>}
       </div>
       {/* En haut à droite : laisse toute la largeur du bas à la barre de vues (mobile). */}
-      <div className="absolute top-s1 right-s1">
+      <div className="absolute top-s1 right-s1 flex flex-col gap-s2">
         <BackgroundToggle />
+        {actions}
       </div>
       {status === 'loading' && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center" role="status">
@@ -231,14 +241,60 @@ export function SceneOverlay() {
 type Tab = 'garment' | 'elements' | 'properties';
 type SheetState = 'peek' | 'mid' | 'full';
 
-function MobileSheet() {
+// Hauteur intermédiaire : celle de la maquette, sans dépasser 46 % de l'écran (petits téléphones).
+const SHEET_HEIGHT: Record<SheetState, string> = {
+  peek: 'h-h-sheet-peek',
+  mid: 'h-[min(var(--spacing-h-sheet-mid),46dvh)]',
+  full: 'h-[calc(100dvh-var(--spacing-h-topbar))]',
+};
+// Bas de la scène : elle occupe ce que le panneau laisse (en plein écran, elle reste à sa taille intermédiaire, cachée).
+const SCENE_BOTTOM: Record<SheetState, string> = {
+  peek: 'bottom-[var(--spacing-h-sheet-peek)]',
+  mid: 'bottom-[min(var(--spacing-h-sheet-mid),46dvh)]',
+  full: 'bottom-[min(var(--spacing-h-sheet-mid),46dvh)]',
+};
+const SHEET_ORDER: SheetState[] = ['peek', 'mid', 'full'];
+/** Glissement minimal, en pixels, pour changer de hauteur. */
+const SWIPE_PX = 32;
+
+function MobileSheet({ state, setState }: { state: SheetState; setState: (s: SheetState) => void }) {
   const [tab, setTab] = useState<Tab>('elements');
-  const [state, setState] = useState<SheetState>('mid');
   const next: Record<SheetState, SheetState> = { peek: 'mid', mid: 'full', full: 'peek' };
-  const height = state === 'peek' ? 'h-h-sheet-peek' : state === 'mid' ? 'h-h-sheet-mid' : 'h-[calc(100dvh-var(--spacing-h-topbar))]';
+  const drag = useRef<{ y: number; moved: boolean } | null>(null);
+  const step = (dir: 1 | -1) => setState(SHEET_ORDER[Math.max(0, Math.min(2, SHEET_ORDER.indexOf(state) + dir))]);
   return (
-    <section className={cx('absolute inset-x-0 bottom-0 z-10 flex flex-col glass rounded-t-r1', height)}>
-      <button type="button" aria-label={t.sheetToggle} onClick={() => setState(next[state])} className="flex h-h-handle shrink-0 items-center justify-center">
+    <section className={cx('absolute inset-x-0 bottom-0 z-10 flex flex-col glass rounded-t-r1', SHEET_HEIGHT[state])}>
+      {/* Toucher : hauteur suivante ; glisser vers le haut ou le bas : agrandir ou réduire. */}
+      <button
+        type="button"
+        aria-label={t.sheetToggle}
+        onPointerDown={(e) => {
+          drag.current = { y: e.clientY, moved: false };
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onPointerMove={(e) => {
+          const d = drag.current;
+          if (!d || d.moved || Math.abs(e.clientY - d.y) < SWIPE_PX) return;
+          d.moved = true;
+          step(e.clientY < d.y ? 1 : -1);
+        }}
+        onPointerUp={() => {
+          if (drag.current && !drag.current.moved) setState(next[state]);
+          drag.current = null;
+        }}
+        onPointerCancel={() => (drag.current = null)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            step(e.key === 'ArrowUp' ? 1 : -1);
+          }
+        }}
+        onClick={(e) => {
+          // Clavier (Entrée, Espace) : le toucher est déjà traité par les événements de pointeur.
+          if (e.detail === 0) setState(next[state]);
+        }}
+        className="flex h-touch-min shrink-0 touch-none items-center justify-center"
+      >
         <span className="h-1 w-9 rounded-full bg-ink/60" />
       </button>
       <div className="shrink-0 px-s1">
@@ -257,7 +313,8 @@ function MobileSheet() {
           ]}
         />
       </div>
-      <div className="mt-s1 flex-1 overflow-y-auto px-s1 pb-safe">
+      {/* `key` : chaque onglet repart du haut, au lieu de garder le défilement du précédent. */}
+      <div key={tab} className="mt-s1 flex-1 overflow-y-auto px-s1 pb-safe">
         {tab === 'garment' && <GarmentPanel />}
         {tab === 'elements' && (
           <div className="space-y-s3">
@@ -277,6 +334,7 @@ export default function EditorScreen() {
   const design = useDesign((s) => s.design);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
   const [exporting, setExporting] = useState(false);
+  const [sheet, setSheet] = useState<SheetState>('mid');
   const desktop = useIsDesktop();
   useAutosave();
   useShortcuts();
@@ -334,11 +392,11 @@ export default function EditorScreen() {
         </div>
       ) : (
         <div className="relative min-h-0 flex-1">
-          <div className="absolute inset-x-0 top-0 bottom-[var(--spacing-h-sheet-mid)]">
+          <div className={cx('absolute inset-x-0 top-0', SCENE_BOTTOM[sheet])}>
             <Scene />
-            <SceneOverlay />
+            <SceneOverlay actions={<GlbButton place="overlay" />} />
           </div>
-          <MobileSheet />
+          <MobileSheet state={sheet} setState={setSheet} />
         </div>
       )}
       {exporting && <ExportDialog onClose={() => setExporting(false)} />}

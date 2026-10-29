@@ -21,12 +21,16 @@ const json = (body: unknown, status = 200) =>
     headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 
+// Lien inconnu, désactivé ou création supprimée : un cas normal, pas une erreur. Réponse 200, pour que le
+// navigateur du visiteur n'affiche pas d'erreur réseau dans sa console.
+const notFound = () => json({ error: 'not_found' });
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'GET') return json({ error: 'method_not_allowed' }, 405);
 
   const token = new URL(req.url).searchParams.get('t') ?? '';
-  if (!TOKEN.test(token)) return json({ error: 'not_found' }, 404);
+  if (!TOKEN.test(token)) return notFound();
 
   const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -34,7 +38,7 @@ Deno.serve(async (req) => {
 
   const { data: share, error: shareError } = await admin.from('shares').select('design_id, user_id').eq('token', token).maybeSingle();
   if (shareError) return json({ error: 'server' }, 500);
-  if (!share) return json({ error: 'not_found' }, 404);
+  if (!share) return notFound();
 
   const { data: row, error: designError } = await admin
     .from('designs')
@@ -44,7 +48,7 @@ Deno.serve(async (req) => {
     .is('deleted_at', null)
     .maybeSingle();
   if (designError) return json({ error: 'server' }, 500);
-  if (!row) return json({ error: 'not_found' }, 404);
+  if (!row) return notFound();
 
   const design = row.data as { elements: { kind: string; asset_id?: string }[] };
   const ids = [...new Set(design.elements.flatMap((e) => (e.kind === 'image' && e.asset_id ? [e.asset_id] : [])))];

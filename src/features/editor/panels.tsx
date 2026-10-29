@@ -109,7 +109,8 @@ export function GarmentPanel() {
       <div>
         <div className="mb-s2 text-xs font-semibold tracking-wide text-muted uppercase" id="color-label">
           {t.color} · <span className="normal-case">{colors.find((c) => c.id === design.color)?.name ?? t.unknownColor}</span>
-          {colorsProvisional && <span className="ml-1 normal-case">({fr.provisional}, {fr.tbd})</span>}
+          {/* « provisoire » suffit à l'utilisateur ; le [TBD] reste dans config/ et sur la fiche de l'atelier. */}
+          {colorsProvisional && <span className="ml-1 normal-case">({fr.provisional})</span>}
         </div>
         <div role="radiogroup" aria-labelledby="color-label" className="flex flex-wrap gap-s4">
           {colors.map((c) => (
@@ -537,8 +538,8 @@ function ZonePlan({ zone, el, current }: { zone: ZoneId; el: DesignElement; curr
     requestView(ZONE_VIEW[p.zone]);
   };
   return (
-    <figure className="glass flex flex-col items-center gap-1 rounded-r1 p-s2">
-      <svg viewBox={vb} className={cx('w-full', sleeve ? 'h-28' : 'h-32')} role="group" aria-label={fr.zones[zone]}>
+    <figure className="glass flex flex-col items-center gap-1 rounded-r1 p-s2 max-desk:w-32 max-desk:shrink-0 max-desk:snap-start">
+      <svg viewBox={vb} className={cx('w-full', sleeve ? 'h-24 desk:h-28' : 'h-28 desk:h-32')} role="group" aria-label={fr.zones[zone]}>
         {/* Silhouette de la zone : corps (ou manche) à l'échelle, avec le col pour le devant et le dos. */}
         <rect
           x={-z.width / 2}
@@ -602,12 +603,13 @@ function PlacementPicker({ el }: { el: DesignElement }) {
           type="button"
           onClick={() => applyPlacement(el.id, null)}
           aria-pressed={!current}
-          className={cx('glass-press min-h-8 rounded-r-pill px-s4 text-xs', !current ? 'glass font-semibold' : 'text-muted hover:text-ink')}
+          className={cx('glass-press min-h-8 rounded-r-pill px-s4 text-xs max-desk:min-h-touch-min', !current ? 'glass font-semibold' : 'text-muted hover:text-ink')}
         >
           {t.placementFree}
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-s2">
+      {/* Mobile : une rangée qui défile, pour garder la police et la couleur à portée sans long défilement. */}
+      <div className="-mx-s1 flex snap-x scroll-px-s1 gap-s2 overflow-x-auto px-s1 pb-1 desk:mx-0 desk:grid desk:grid-cols-2 desk:overflow-visible desk:px-0 desk:pb-0">
         {ZONE_IDS.map((z) => (
           <ZonePlan key={z} zone={z} el={el} current={current} />
         ))}
@@ -784,7 +786,7 @@ export function PropertiesPanel({ onAdded }: { onAdded?: () => void }) {
           />
           <div>
             <GroupLabel>{t.align}</GroupLabel>
-            <div role="radiogroup" aria-label={t.align} className="glass-track flex h-h-seg gap-1 rounded-r-ctl p-p-seg">
+            <div role="radiogroup" aria-label={t.align} className="glass-track flex h-h-seg max-desk:h-[calc(var(--spacing-h-seg)+6px)] gap-1 rounded-r-ctl p-p-seg">
               {(['left', 'center', 'right'] as const).map((a: TextAlign) => (
                 <button
                   key={a}

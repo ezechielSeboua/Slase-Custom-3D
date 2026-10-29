@@ -57,14 +57,15 @@ export class ShareNotFoundError extends Error {}
 
 /** Création partagée et ses images (téléchargées en mémoire), pour l'affichage en lecture seule. */
 export async function openShare(token: string): Promise<{ design: Design; assets: AssetRecord[] }> {
-  const { data, error } = await client().functions.invoke<{ design: Design; assets: (AssetMeta & { url: string })[] }>(
+  const { data, error } = await client().functions.invoke<{ design?: Design; assets?: (AssetMeta & { url: string })[]; error?: string }>(
     `shared-design?t=${encodeURIComponent(token)}`,
     { method: 'GET' },
   );
-  if (error || !data) {
-    const status = (error as { context?: Response } | null)?.context?.status;
-    throw status === 404 ? new ShareNotFoundError() : (error ?? new Error('share'));
-  }
+  // « Introuvable » arrive en réponse normale ({ error: 'not_found' }) ; le code 404 reste reconnu par sécurité.
+  const status = (error as { context?: Response } | null)?.context?.status;
+  if (data?.error === 'not_found' || status === 404) throw new ShareNotFoundError();
+  if (error || !data?.design || !data.assets) throw error ?? new Error('share');
+  const design = data.design;
   const assets = await Promise.all(
     data.assets.map(async ({ url, ...meta }) => {
       const res = await fetch(url);
@@ -72,5 +73,5 @@ export async function openShare(token: string): Promise<{ design: Design; assets
       return { ...meta, blob: await res.blob() };
     }),
   );
-  return { design: data.design, assets };
+  return { design, assets };
 }

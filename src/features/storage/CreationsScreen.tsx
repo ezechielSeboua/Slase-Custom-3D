@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useIsDesktop } from '@/lib/useMedia';
 import type { Design } from '@/types/design';
 import { colorById, colors } from '@/lib/config';
 import {
@@ -63,14 +65,18 @@ function Thumb({ id, updated }: { id: string; updated: string }) {
 }
 
 function CardMenu({
-  onRename, onDuplicate, onExport, onDelete, onShare,
-}: Record<'onRename' | 'onDuplicate' | 'onExport' | 'onDelete', () => void> & { onShare?: () => void }) {
+  title, onRename, onDuplicate, onExport, onDelete, onShare,
+}: Record<'onRename' | 'onDuplicate' | 'onExport' | 'onDelete', () => void> & { title?: string; onShare?: () => void }) {
   const [open, setOpen] = useState(false);
+  const desktop = useIsDesktop();
   const ref = useRef<HTMLDivElement>(null);
+  // Sur mobile, la feuille d'actions est rendue hors de la carte (portail) : elle compte aussi comme « dedans ».
+  const sheetRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const close = (e: Event) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (!ref.current?.contains(target) && !sheetRef.current?.contains(target)) setOpen(false);
     };
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('pointerdown', close);
@@ -84,30 +90,47 @@ function CardMenu({
     <button
       type="button"
       role="menuitem"
-      className="flex h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-white/60"
+      className="flex min-h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-white/60 max-desk:gap-s1 max-desk:py-s4 max-desk:text-base"
       onClick={() => {
         setOpen(false);
         fn();
       }}
     >
-      <Icon name={icon} size={18} />
+      <Icon name={icon} size={desktop ? 18 : 20} />
       {label}
     </button>
+  );
+  const items = (
+    <>
+      {item('pencil', fr.common.rename, onRename)}
+      {item('copy', fr.common.duplicate, onDuplicate)}
+      {onShare && item('share', fr.share.action, onShare)}
+      {item('download', t.exportJson, onExport)}
+      {item('trash', fr.common.delete, onDelete)}
+    </>
   );
   return (
     <div ref={ref} className="relative">
       <IconButton label={fr.common.more} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <Icon name="more" />
       </IconButton>
-      {open && (
+      {open && desktop && (
         <div role="menu" className="glass absolute right-0 bottom-full z-20 mb-1 w-52 rounded-r1 py-s2">
-          {item('pencil', fr.common.rename, onRename)}
-          {item('copy', fr.common.duplicate, onDuplicate)}
-          {onShare && item('share', fr.share.action, onShare)}
-          {item('download', t.exportJson, onExport)}
-          {item('trash', fr.common.delete, onDelete)}
+          {items}
         </div>
       )}
+      {/* Mobile : feuille d'actions en bas de l'écran, à portée du pouce, au-dessus d'un voile. */}
+      {open &&
+        !desktop &&
+        createPortal(
+          <div ref={sheetRef} className="fixed inset-0 z-50 flex items-end bg-ink/30" onClick={(e) => e.target === e.currentTarget && setOpen(false)}>
+            <div role="menu" aria-label={title} className="w-full rounded-t-r1 bg-surface pt-s2 pb-safe shadow-lg">
+              {title && <p className="truncate border-b border-line px-s1 pt-s2 pb-s4 text-sm font-semibold">{title}</p>}
+              {items}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -357,7 +380,7 @@ export default function CreationsScreen() {
                             }}
                           />
                         ) : (
-                          <Link href={`/editor?id=${d.id}`} className="block truncate text-sm font-semibold">
+                          <Link href={`/editor?id=${d.id}`} className="line-clamp-2 text-sm font-semibold break-words">
                             {d.name || t.untitled}
                           </Link>
                         )}
@@ -371,6 +394,7 @@ export default function CreationsScreen() {
                         <p className="truncate text-xs text-muted">{relativeDate(d.updated_at)}</p>
                       </div>
                       <CardMenu
+                        title={d.name || t.untitled}
                         onRename={() => setRenaming(d.id)}
                         onDuplicate={async () => {
                           await duplicateDesign(d.id, t.copySuffix);
@@ -391,12 +415,15 @@ export default function CreationsScreen() {
 
       {sharing && <ShareDialog designId={sharing} onClose={() => setSharing(null)} />}
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-white/70 bg-white/55 p-s1 pb-safe px-safe backdrop-blur-xl desk:hidden">
-        <Link href="/new" className={cx('flex h-h-btn items-center justify-center gap-s2 rounded-r-ctl text-sm font-medium', glassButton.primary)}>
-          <Icon name="plus" size={18} />
-          {t.newDesign}
-        </Link>
-      </div>
+      {/* Sans création, l'accueil a déjà son bouton : la barre le cacherait sur les petits écrans. */}
+      {designs?.length ? (
+        <div className="fixed inset-x-0 bottom-0 border-t border-white/70 bg-white/55 p-s1 pb-safe px-safe backdrop-blur-xl desk:hidden">
+          <Link href="/new" className={cx('flex h-h-btn items-center justify-center gap-s2 rounded-r-ctl text-sm font-medium', glassButton.primary)}>
+            <Icon name="plus" size={18} />
+            {t.newDesign}
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

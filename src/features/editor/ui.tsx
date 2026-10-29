@@ -99,7 +99,8 @@ export function Segmented<T extends string | number>({
       <div id={id} className={cx('mb-s2 text-xs font-semibold tracking-wide text-muted uppercase', hideLabel && 'sr-only')}>
         {label}
       </div>
-      <div role="radiogroup" aria-labelledby={id} className="glass-track relative flex h-h-seg rounded-r-ctl p-p-seg">
+      {/* Mobile : 6 px de plus, pour des choix d'environ 40 px de haut sous le doigt. */}
+      <div role="radiogroup" aria-labelledby={id} className="glass-track relative flex h-h-seg max-desk:h-[calc(var(--spacing-h-seg)+6px)] rounded-r-ctl p-p-seg">
         {/* Pastille en verre qui glisse sous l'option choisie. */}
         <span
           aria-hidden="true"
@@ -173,8 +174,8 @@ export function NumberField({
     onCommit(Math.min(max ?? Infinity, Math.max(min ?? -Infinity, v)));
   };
   return (
-    <label htmlFor={id} className={cx('flex h-h-field flex-col justify-center rounded-r-ctl border border-ink/50 px-s2', 'focus-within:border-ink focus-within:border-[1.5px]', disabled && 'opacity-40')}>
-      <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">{label}</span>
+    <label htmlFor={id} className={cx('flex min-h-h-field flex-col justify-center rounded-r-ctl border border-ink/50 px-s2 py-1', 'focus-within:border-ink focus-within:border-[1.5px]', disabled && 'opacity-40')}>
+      <span className="truncate text-xs font-semibold tracking-wide text-muted uppercase">{label}</span>
       <span className="flex items-baseline gap-1">
         <input
           id={id}
