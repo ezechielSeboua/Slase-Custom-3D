@@ -323,7 +323,7 @@ La V1 garde tout dans le navigateur (IndexedDB) : une création n'existe que sur
 
 ### Objectifs
 
-- **Comptes** : créer un compte, se connecter, se déconnecter, réinitialiser son mot de passe.
+- **Comptes** : se connecter avec Google, se déconnecter, supprimer son compte.
 - **Créations enregistrées sur le serveur** : la sauvegarde automatique envoie la création au serveur ; la liste « Mes créations » vient du compte.
 - **Synchronisation entre appareils** : une création commencée sur ordinateur se reprend sur téléphone.
 - **Images sur le serveur** : les images importées sont stockées avec la création, dans leur résolution d'origine.
@@ -379,27 +379,23 @@ Le schéma est appliqué par migrations SQL, relues avant application.
 
 - **D'abord en local** : l'app écrit dans IndexedDB comme en V1, puis envoie les changements à Supabase en arrière-plan.
 - **Hors ligne** : les changements attendent dans une file locale et partent au retour du réseau.
-- **Conflits** : proposition, la dernière modification gagne (comparaison de `updated_at`). À confirmer.
+- **Conflits** (décision du 29 oct. 2026) : la dernière modification gagne (comparaison de `updated_at`), sans demander à l'utilisateur. La sauvegarde reste automatique, comme décrit plus haut.
 - **Images** : envoyées une fois, à l'import ; une image déjà présente sur le serveur n'est pas renvoyée.
 - **Reprise de l'existant** : à la première connexion, l'app propose d'importer dans le compte les créations déjà présentes dans le navigateur.
 
 ### Côté app
 
 - **Paquets** : `@supabase/supabase-js` et `@supabase/ssr`. La liste des versions sera montrée avant installation.
-- **Nouveaux écrans** : connexion, création de compte, mot de passe oublié, menu « Mon compte » (déconnexion, suppression du compte).
+- **Nouveaux écrans** : connexion (Google), menu « Mon compte » (déconnexion, suppression du compte), page de partage en lecture seule.
 
 ### Connexion
 
-Décision du 28 octobre 2026 : deux méthodes de connexion.
-
-- **E-mail et mot de passe** : création de compte avec confirmation de l'adresse par e-mail, connexion, « mot de passe oublié » (lien de réinitialisation envoyé par Supabase).
-- **Compte Google** : un clic, sans mot de passe. Un utilisateur venu par Google se reconnecte toujours par Google : il n'a pas de mot de passe à définir, et aucun mot de passe ne lui est envoyé par e-mail.
+Décision du 29 octobre 2026 (remplace celle du 28 oct.) : **Google seulement**. Un clic, sans mot de passe. Il n'y a ni création de compte par e-mail, ni mot de passe, ni « mot de passe oublié », donc aucun e-mail à envoyer et aucun service d'envoi à brancher. La méthode « e-mail et mot de passe » est désactivée dans le tableau de bord Supabase (Authentication → Providers → Email).
 
 À mettre en place :
 
 - **Google** : créer un identifiant OAuth (« application Web ») dans la Google Cloud Console, avec l'adresse de retour `https://tcxsfoeyfrcuyztxgwvo.supabase.co/auth/v1/callback`, puis saisir l'identifiant et le secret dans le tableau de bord Supabase (Authentication → Providers → Google). Le secret ne va jamais dans le code de l'app.
-- **Envoi des e-mails** (confirmation d'inscription, mot de passe oublié) : le service intégré de Supabase ne convient qu'aux tests (volume très limité, envois réservés aux membres de l'équipe du projet selon les règles actuelles). Pour de vrais utilisateurs, brancher un service d'envoi (Resend, Brevo…) dans Authentication → SMTP. Service choisi : `[TBD]`.
-- **Adresses autorisées** : déclarer l'adresse de l'app (développement et production) dans Authentication → URL Configuration, pour les retours de connexion et les liens des e-mails.
+- **Adresses autorisées** : déclarer l'adresse de l'app (développement et production) dans Authentication → URL Configuration, pour les retours de connexion.
 - **Module de stockage** : `src/features/storage/` passe d'IndexedDB seul à IndexedDB + Supabase. L'éditeur, la scène 3D et les exports ne changent pas.
 
 ### Formule gratuite
@@ -411,16 +407,19 @@ Décision du 28 octobre 2026 : deux méthodes de connexion.
 ### Étapes de réalisation
 
 1. **Base** : tables, règles d'accès et espace de stockage, par migration SQL relue avant application.
-2. **Comptes** : écrans de connexion, de création de compte et de mot de passe oublié, et menu « Mon compte ».
+2. **Comptes** : connexion Google, menu « Mon compte », suppression du compte et de tous ses fichiers.
 3. **Synchronisation** : envoi et réception des créations et des images, file hors ligne, propagation des suppressions.
 4. **Reprise des créations locales** à la première connexion.
-5. **Vérifications** : un compte ne voit jamais les données d'un autre, la synchronisation entre deux appareils, le hors ligne, la page de mentions sur les données personnelles.
+5. **Partage par lien** en lecture seule.
+6. **Vérifications** : un compte ne voit jamais les données d'un autre, la synchronisation entre deux appareils, le hors ligne, le partage (lecture seule, lien désactivable), la page de mentions sur les données personnelles.
 
-### À décider (`[TBD]`)
+### Données personnelles
 
-- **Règle en cas de conflit** : dernière modification gagnante (proposé) ou choix laissé à l'utilisateur.
-- **Données personnelles** (RGPD et loi ivoirienne sur les données à caractère personnel) : mentions, durée de conservation, suppression du compte et de ses fichiers.
-- **Partage d'une création par lien**, en lecture seule (facultatif).
+Décision du 29 octobre 2026 : les données (créations, images, miniatures) sont conservées **tant que le compte existe**. La suppression du compte efface définitivement ses lignes et tous ses fichiers dans Storage. Elle passe par la fonction Supabase `delete-account` (source dans `supabase/functions/`), seule à utiliser la clé d'administration ; les créations encore présentes dans le navigateur n'y sont pas touchées. Le texte des mentions (RGPD et loi ivoirienne sur les données à caractère personnel) reste `[TBD]`.
+
+### Partage par lien
+
+Décision du 29 octobre 2026 : un bouton « Partager » crée pour une création un lien secret, désactivable à tout moment. La personne qui ouvre le lien voit la création en 3D, **en lecture seule**, sans compte : elle ne peut ni la modifier, ni la dupliquer, ni l'exporter. Les images restent dans l'espace privé et ne sont servies qu'à travers ce lien. Le détail technique (jeton, lecture côté serveur) est fixé par migration SQL relue avant application.
 
 ### Contraintes
 

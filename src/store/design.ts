@@ -22,6 +22,8 @@ interface DesignState {
   gestureStart: Design | null;
   lastKey: string | null;
   lastTime: number;
+  /** Création vue par lien partagé : rien ne se sélectionne ni ne se déplace. */
+  readOnly: boolean;
 }
 
 export const useDesign = create<DesignState>(() => ({
@@ -34,6 +36,7 @@ export const useDesign = create<DesignState>(() => ({
   gestureStart: null,
   lastKey: null,
   lastTime: 0,
+  readOnly: false,
 }));
 
 const get = useDesign.getState;
@@ -72,8 +75,9 @@ function freeIfMoved(patch: Partial<DesignElement>): Partial<DesignElement> {
 
 const stamp = (d: Design): Design => ({ ...d, updated_at: new Date().toISOString() });
 
-export function loadDesign(design: Design, assets: AssetMeta[]) {
+export function loadDesign(design: Design, assets: AssetMeta[], readOnly = false) {
   set({
+    readOnly,
     design: normalize(design),
     assets: Object.fromEntries(assets.map((a) => [a.id, a])),
     selectedId: null,
@@ -85,7 +89,7 @@ export function loadDesign(design: Design, assets: AssetMeta[]) {
 }
 
 export function unloadDesign() {
-  set({ design: null, assets: {}, selectedId: null, past: [], future: [], gestureStart: null });
+  set({ design: null, assets: {}, selectedId: null, past: [], future: [], gestureStart: null, readOnly: false });
 }
 
 /**

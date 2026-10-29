@@ -27,41 +27,32 @@ export function AuthListener() {
   return null;
 }
 
-export async function signOut() {
-  await getSupabase()?.auth.signOut();
+/** `local` : n'efface que la session de cet onglet (ex. compte déjà supprimé côté serveur). */
+export async function signOut(scope: 'global' | 'local' = 'global') {
+  await getSupabase()?.auth.signOut({ scope });
 }
 
-/** Méthodes de connexion du compte, pour l'affichage : « Google », « E-mail et mot de passe ». */
+/**
+ * Supprime définitivement le compte connecté, ses créations et ses fichiers, via la fonction Supabase
+ * `delete-account` (seule à détenir la clé d'administration). Rend false si la suppression a échoué.
+ * La session locale reste ouverte : l'appelant quitte la page puis appelle signOut('local').
+ */
+export async function deleteAccount(): Promise<boolean> {
+  const supabase = getSupabase();
+  if (!supabase) return false;
+  const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  return !error;
+}
+
+/** Méthodes de connexion du compte, pour l'affichage (« Google »). */
 export function providersOf(user: User): string[] {
   const ids = new Set((user.identities ?? []).map((i) => i.provider));
   if (!ids.size && user.app_metadata?.provider) ids.add(user.app_metadata.provider);
-  return [...ids].map((p) => (p === 'google' ? fr.auth.providerGoogle : p === 'email' ? fr.auth.providerEmail : p));
+  return [...ids].map((p) => (p === 'google' ? fr.auth.providerGoogle : p));
 }
 
 /** Message en français pour une erreur Supabase Auth (codes documentés), sinon un message générique. */
 export function authErrorMessage(error: AuthError | null | undefined): string {
   const t = fr.auth.errors;
-  switch (error?.code) {
-    case 'invalid_credentials':
-      return t.invalidCredentials;
-    case 'email_not_confirmed':
-      return t.emailNotConfirmed;
-    case 'user_already_exists':
-    case 'email_exists':
-      return t.userExists;
-    case 'weak_password':
-      return t.weakPassword;
-    case 'same_password':
-      return t.samePassword;
-    case 'email_address_invalid':
-    case 'validation_failed':
-      return t.invalidEmail;
-    case 'over_email_send_rate_limit':
-    case 'over_request_rate_limit':
-      return t.rateLimit;
-    case 'signup_disabled':
-      return t.signupDisabled;
-    default:
-      return t.generic;
-  }
+  return error?.code === 'over_request_rate_limit' ? t.rateLimit : t.generic;
 }

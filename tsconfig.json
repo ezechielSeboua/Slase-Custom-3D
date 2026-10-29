@@ -17,5 +17,5 @@
     "paths": { "@/*": ["./src/*"], "@config/*": ["./config/*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
-  "exclude": ["node_modules", "docs", "scripts"]
+  "exclude": ["node_modules", "docs", "scripts", "supabase"]
 }

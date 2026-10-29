@@ -7,10 +7,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Design } from '@/types/design';
 import { colorById, colors } from '@/lib/config';
 import {
-  deleteDesign, duplicateDesign, getDesign, getThumbs, listDesigns, putDesign, removeOrphanAssets, restoreDesign, storageAvailable,
+  claimDesigns, deleteDesign, duplicateDesign, getDesign, getThumbs, listDesigns, listUnclaimedDesigns, putDesign, removeOrphanAssets,
+  restoreDesign, storageAvailable,
 } from '@/features/storage/db';
+import { useSync, type SyncStatus } from '@/features/storage/sync';
+import { useAuth } from '@/features/auth/session';
+import { ShareDialog } from '@/features/storage/ShareDialog';
 import { designFileBlob, downloadBlob, importDesignFile, slug } from '@/features/storage/json';
-import { BrandMark, cx, glassButton, IconButton, WarningItem } from '@/features/editor/ui';
+import { BrandMark, Button, cx, glassButton, IconButton, Spinner, WarningItem } from '@/features/editor/ui';
 import { Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { AccountButton } from '@/features/auth/AccountButton';
@@ -58,7 +62,9 @@ function Thumb({ id, updated }: { id: string; updated: string }) {
   );
 }
 
-function CardMenu({ onRename, onDuplicate, onExport, onDelete }: Record<'onRename' | 'onDuplicate' | 'onExport' | 'onDelete', () => void>) {
+function CardMenu({
+  onRename, onDuplicate, onExport, onDelete, onShare,
+}: Record<'onRename' | 'onDuplicate' | 'onExport' | 'onDelete', () => void> & { onShare?: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -97,11 +103,57 @@ function CardMenu({ onRename, onDuplicate, onExport, onDelete }: Record<'onRenam
         <div role="menu" className="glass absolute right-0 bottom-full z-20 mb-1 w-52 rounded-r1 py-s2">
           {item('pencil', fr.common.rename, onRename)}
           {item('copy', fr.common.duplicate, onDuplicate)}
+          {onShare && item('share', fr.share.action, onShare)}
           {item('download', t.exportJson, onExport)}
           {item('trash', fr.common.delete, onDelete)}
         </div>
       )}
     </div>
+  );
+}
+
+/** État de la synchronisation, à côté du titre (seulement avec un compte). */
+function SyncBadge({ status }: { status: SyncStatus }) {
+  if (status === 'off') return null;
+  const label = t.sync[status];
+  return (
+    <span role="status" className={cx('inline-flex items-center gap-1 text-xs font-normal', status === 'error' || status === 'offline' ? 'text-warn' : 'text-muted')}>
+      {status === 'syncing' ? <Spinner size={12} /> : <span aria-hidden="true">{status === 'synced' ? '✓' : '!'}</span>}
+      {label}
+    </span>
+  );
+}
+
+/** Reprise : propose d'ajouter au compte les créations faites sans compte dans ce navigateur. */
+function ClaimBanner({ ids, onDone }: { ids: string[]; onDone: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  if (hidden || !ids.length) return null;
+  return (
+    <WarningItem
+      tone="info"
+      action={
+        <div className="flex flex-wrap gap-s2">
+          <Button onClick={() => setHidden(true)} disabled={busy}>{t.claimLater}</Button>
+          <Button
+            variant="primary"
+            busy={busy}
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              await claimDesigns(ids).catch(() => {});
+              showToast(t.claimed(ids.length));
+              setBusy(false);
+              onDone();
+            }}
+          >
+            {t.claim}
+          </Button>
+        </div>
+      }
+    >
+      {t.claimText(ids.length)}
+    </WarningItem>
   );
 }
 
@@ -134,15 +186,26 @@ export default function CreationsScreen() {
   const [storageOk, setStorageOk] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [unclaimed, setUnclaimed] = useState<string[]>([]);
+  const [sharing, setSharing] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const signedIn = useAuth((s) => s.status === 'signedIn');
+  const { status: syncStatus, revision, pulled } = useSync();
 
   const refresh = useCallback(async () => {
     try {
       setDesigns(await listDesigns());
+      setUnclaimed(useAuth.getState().status === 'signedIn' ? (await listUnclaimedDesigns()).map((d) => d.id) : []);
     } catch {
       setDesigns([]);
     }
   }, []);
+
+  // Créations reçues d'un autre appareil, ou changement de compte.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (revision) refresh();
+  }, [revision, refresh]);
 
   useEffect(() => {
     storageAvailable().then(setStorageOk);
@@ -226,9 +289,11 @@ export default function CreationsScreen() {
         <div className="mb-s1 space-y-s2" aria-live="polite">
           {!storageOk && <WarningItem>{t.storageUnavailable}</WarningItem>}
           {message && <WarningItem>{message}</WarningItem>}
+          {signedIn && <ClaimBanner ids={unclaimed} onDone={refresh} />}
         </div>
 
-        {designs === null ? (
+        {/* Avec un compte, sur un appareil encore vide : on attend la liste du compte avant l'accueil. */}
+        {designs === null || (signedIn && !pulled && designs.length === 0 && syncStatus === 'syncing') ? (
           <div className="grid grid-cols-2 gap-s4 desk:grid-cols-4 desk:gap-s3" aria-busy="true">
             {Array.from({ length: 4 }, (_, i) => (
               <div key={i} className="aspect-[173/240] animate-pulse rounded-r1 border border-dashed border-line bg-white/40" />
@@ -238,9 +303,12 @@ export default function CreationsScreen() {
           <Welcome onImport={openImport} />
         ) : (
           <>
-            <h1 className="mb-s1 text-2xl font-semibold desk:mb-s3">
-              {t.title} <span className="text-base font-normal text-muted">{designs.length}</span>
-            </h1>
+            <div className="mb-s1 flex flex-wrap items-baseline justify-between gap-x-s1 gap-y-1 desk:mb-s3">
+              <h1 className="text-2xl font-semibold">
+                {t.title} <span className="text-base font-normal text-muted">{designs.length}</span>
+              </h1>
+              {signedIn && <SyncBadge status={syncStatus} />}
+            </div>
             <ul className="grid grid-cols-2 gap-s4 desk:grid-cols-4 desk:gap-s3">
               <li>
                 <Link
@@ -310,6 +378,7 @@ export default function CreationsScreen() {
                         }}
                         onExport={async () => downloadBlob(await designFileBlob(d), `${slug(d.name)}.json`)}
                         onDelete={() => remove(d)}
+                        onShare={signedIn ? () => setSharing(d.id) : undefined}
                       />
                     </div>
                   </li>
@@ -319,6 +388,8 @@ export default function CreationsScreen() {
           </>
         )}
       </main>
+
+      {sharing && <ShareDialog designId={sharing} onClose={() => setSharing(null)} />}
 
       <div className="fixed inset-x-0 bottom-0 border-t border-white/70 bg-white/55 p-s1 pb-safe px-safe backdrop-blur-xl desk:hidden">
         <Link href="/new" className={cx('flex h-h-btn items-center justify-center gap-s2 rounded-r-ctl text-sm font-medium', glassButton.primary)}>

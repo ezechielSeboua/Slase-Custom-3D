@@ -176,6 +176,8 @@ export function Garment({ model, design }: { model: GarmentModel; design: Design
   const drag = useRef<{ id: string; zone: ZoneId; dx: number; dy: number } | null>(null);
 
   const onDecalDown = (e: ThreeEvent<PointerEvent>) => {
+    // Lecture seule : le geste fait tourner la vue, comme sur le tissu.
+    if (useDesign.getState().readOnly) return;
     e.stopPropagation();
     // Le calque le plus haut sous le pointeur gagne.
     const hits = e.intersections.filter((i) => i.object.userData.elementId);

@@ -175,7 +175,8 @@ function BackgroundToggle() {
   );
 }
 
-function SceneOverlay() {
+/** Bandeau d'aperçu, fond, chargement et vues rapides ; repris tel quel par la page de partage. */
+export function SceneOverlay() {
   const status = useScene((s) => s.status);
   const view = useScene((s) => s.view.id);
   const design = useDesign((s) => s.design)!;

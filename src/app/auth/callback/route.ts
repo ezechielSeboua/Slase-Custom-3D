@@ -3,7 +3,7 @@ import { createSupabaseServer } from '@/lib/supabase/server';
 import { safeNext, supabaseConfigured } from '@/lib/supabase/config';
 
 /**
- * Retour de connexion : Google, lien de confirmation d'inscription, lien « mot de passe oublié ».
+ * Retour de connexion Google.
  * Supabase renvoie ici avec un `code` à échanger contre une session (cookies), puis on redirige vers `next`.
  */
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     if (!exchangeError) return NextResponse.redirect(`${origin}${next}`);
   }
-  // Lien expiré, déjà utilisé, ou connexion annulée : retour à la connexion avec un message.
+  // Code expiré ou déjà utilisé, ou connexion annulée : retour à la connexion avec un message.
   const reason = error ? 'denied' : 'link';
   return NextResponse.redirect(`${origin}/connexion?erreur=${reason}`);
 }
