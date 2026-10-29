@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useIsDesktop } from '@/lib/useMedia';
 import type { Design } from '@/types/design';
 import { colorById, colors } from '@/lib/config';
@@ -16,7 +15,9 @@ import { useSync, type SyncStatus } from '@/features/storage/sync';
 import { useAuth } from '@/features/auth/session';
 import { ShareDialog } from '@/features/storage/ShareDialog';
 import { designFileBlob, downloadBlob, importDesignFile, slug } from '@/features/storage/json';
-import { BrandMark, Button, cx, glassButton, IconButton, Spinner, WarningItem } from '@/features/editor/ui';
+import {
+  ActionSheet, BrandMark, Button, cx, glassButton, IconButton, menuItemClass, menuSurfaceClass, Spinner, WarningItem,
+} from '@/features/editor/ui';
 import { Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { AccountButton } from '@/features/auth/AccountButton';
@@ -70,13 +71,11 @@ function CardMenu({
   const [open, setOpen] = useState(false);
   const desktop = useIsDesktop();
   const ref = useRef<HTMLDivElement>(null);
-  // Sur mobile, la feuille d'actions est rendue hors de la carte (portail) : elle compte aussi comme « dedans ».
-  const sheetRef = useRef<HTMLDivElement>(null);
+  // Liste déroulante (ordinateur) : un clic ailleurs la ferme. La feuille mobile gère elle-même son voile.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !desktop) return;
     const close = (e: Event) => {
-      const target = e.target as Node;
-      if (!ref.current?.contains(target) && !sheetRef.current?.contains(target)) setOpen(false);
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('pointerdown', close);
@@ -85,12 +84,12 @@ function CardMenu({
       document.removeEventListener('pointerdown', close);
       document.removeEventListener('keydown', esc);
     };
-  }, [open]);
+  }, [open, desktop]);
   const item = (icon: IconName, label: string, fn: () => void) => (
     <button
       type="button"
       role="menuitem"
-      className="flex min-h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-white/60 max-desk:gap-s1 max-desk:py-s4 max-desk:text-base"
+      className={menuItemClass}
       onClick={() => {
         setOpen(false);
         fn();
@@ -115,22 +114,15 @@ function CardMenu({
         <Icon name="more" />
       </IconButton>
       {open && desktop && (
-        <div role="menu" className="glass absolute right-0 bottom-full z-20 mb-1 w-52 rounded-r1 py-s2">
+        <div role="menu" className={cx('absolute right-0 bottom-full z-20 mb-1 w-52', menuSurfaceClass)}>
           {items}
         </div>
       )}
-      {/* Mobile : feuille d'actions en bas de l'écran, à portée du pouce, au-dessus d'un voile. */}
-      {open &&
-        !desktop &&
-        createPortal(
-          <div ref={sheetRef} className="fixed inset-0 z-50 flex items-end bg-ink/30" onClick={(e) => e.target === e.currentTarget && setOpen(false)}>
-            <div role="menu" aria-label={title} className="w-full rounded-t-r1 bg-surface pt-s2 pb-safe shadow-lg">
-              {title && <p className="truncate border-b border-line px-s1 pt-s2 pb-s4 text-sm font-semibold">{title}</p>}
-              {items}
-            </div>
-          </div>,
-          document.body,
-        )}
+      {open && !desktop && (
+        <ActionSheet title={title} onClose={() => setOpen(false)}>
+          {items}
+        </ActionSheet>
+      )}
     </div>
   );
 }

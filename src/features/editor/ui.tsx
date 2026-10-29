@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from '@/features/editor/icons';
 import { fr } from '@/i18n/fr';
 
@@ -256,6 +257,62 @@ export function WarningItem({ children, action, tone = 'warn' }: { children: Rea
   );
 }
 
+/**
+ * Bloque le défilement de la page tant que `active` est vrai (fenêtre, feuille d'actions ouverte).
+ * Compteur partagé : deux surcouches empilées ne débloquent la page qu'à la fermeture de la dernière.
+ */
+let scrollLocks = 0;
+export function useScrollLock(active = true) {
+  useEffect(() => {
+    if (!active) return;
+    const root = document.documentElement;
+    if (scrollLocks++ === 0) root.style.overflow = 'hidden';
+    return () => {
+      if (--scrollLocks === 0) root.style.overflow = '';
+    };
+  }, [active]);
+}
+
+/** Ligne d'un menu (liste déroulante sur ordinateur, feuille d'actions sur mobile). */
+export const menuItemClass =
+  'flex min-h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-paper active:bg-line/60 max-desk:gap-s1 max-desk:py-s4 max-desk:text-base';
+
+/** Surface d'un menu déroulant : opaque, pour rester lisible au-dessus d'un en-tête déjà flouté. */
+export const menuSurfaceClass = 'rounded-r1 border border-line bg-surface py-s2 shadow-lg';
+
+/**
+ * Feuille d'actions mobile : posée en bas de l'écran, à portée du pouce, au-dessus d'un voile.
+ * Rendue dans <body> (un parent flouté fausserait sa position), opaque, page bloquée derrière.
+ * Toucher le voile ou Échap ferme.
+ */
+export function ActionSheet({ title, onClose, children }: { title?: string; onClose: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
+  useScrollLock();
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    ref.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      opener?.focus?.();
+    };
+  }, []);
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-end bg-ink/40" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div ref={ref} role="menu" aria-label={title} className="w-full overscroll-contain rounded-t-r1 bg-surface pt-s2 pb-safe shadow-lg">
+        {title && <p className="truncate border-b border-line px-s1 pt-s2 pb-s4 text-sm font-semibold">{title}</p>}
+        {children}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // Fenêtre modale : piège le focus de façon simple, Échap ferme, le focus revient à l'élément d'origine.
 export function Dialog({
   title, onClose, children, footer, closeLabel,
@@ -268,6 +325,7 @@ export function Dialog({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  useScrollLock();
   // onClose est souvent une fonction recréée à chaque rendu : on la lit via une ref pour monter l'effet une seule fois.
   const closeRef = useRef(onClose);
   useEffect(() => {

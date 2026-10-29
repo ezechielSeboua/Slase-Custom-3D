@@ -19,7 +19,10 @@ import { getAsset } from '@/features/storage/db';
 import { showToast } from '@/features/editor/Toast';
 import { IMAGE_ACCEPT, importImageFile, UnsupportedFileError } from '@/features/editor/importImage';
 import { Icon, type IconName } from '@/features/editor/icons';
-import { cx, IconButton, NumberField, Segmented, Swatch, WarningItem } from '@/features/editor/ui';
+import {
+  ActionSheet, cx, IconButton, menuItemClass, menuSurfaceClass, NumberField, Segmented, Swatch, WarningItem,
+} from '@/features/editor/ui';
+import { useIsDesktop } from '@/lib/useMedia';
 import { fr } from '@/i18n/fr';
 
 const t = fr.editor;
@@ -220,40 +223,53 @@ const ROW_STEP = 60; // hauteur d'une ligne (H_ROW 56) + écart
 
 function LayerMenu({ el, first, last, onRename }: { el: DesignElement; first: boolean; last: boolean; onRename: () => void }) {
   const [open, setOpen] = useState(false);
+  const desktop = useIsDesktop();
   const item = (icon: IconName, label: string, fn: () => void, disabled = false) => (
     <button
       type="button"
       role="menuitem"
       disabled={disabled}
-      className="flex h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-white/60 disabled:opacity-40"
+      className={cx(menuItemClass, 'disabled:opacity-40')}
       onClick={() => {
         setOpen(false);
         fn();
       }}
     >
-      <Icon name={icon} size={18} />
+      <Icon name={icon} size={desktop ? 18 : 20} />
       {label}
     </button>
+  );
+  const items = (
+    <>
+      {item('pencil', fr.common.rename, onRename)}
+      {item('arrowUp', t.moveUp, () => moveLayer(el.id, 1), first)}
+      {item('arrowDown', t.moveDown, () => moveLayer(el.id, -1), last)}
+      {item('copy', fr.common.duplicate, () => duplicateElement(el.id))}
+      {item('trash', fr.common.delete, () => deleteElement(el.id))}
+    </>
   );
   return (
     <div
       className="relative"
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
+        // Ordinateur seulement : la feuille mobile est hors de ce conteneur et prend le focus en s'ouvrant.
+        if (desktop && !e.currentTarget.contains(e.relatedTarget as Node)) setOpen(false);
       }}
       onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
     >
       <IconButton label={fr.common.more} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         <Icon name="more" />
       </IconButton>
-      {open && (
-        <div role="menu" className="glass absolute right-0 z-30 mt-1 w-48 rounded-r1 py-s2">
-          {item('pencil', fr.common.rename, onRename)}
-          {item('arrowUp', t.moveUp, () => moveLayer(el.id, 1), first)}
-          {item('arrowDown', t.moveDown, () => moveLayer(el.id, -1), last)}
-          {item('copy', fr.common.duplicate, () => duplicateElement(el.id))}
-          {item('trash', fr.common.delete, () => deleteElement(el.id))}
+      {open && desktop && (
+        <div role="menu" className={cx('absolute right-0 z-30 mt-1 w-48', menuSurfaceClass)}>
+          {items}
         </div>
+      )}
+      {/* Mobile : feuille d'actions hors du panneau (qui défile et couperait une liste déroulante). */}
+      {open && !desktop && (
+        <ActionSheet title={elementLabel(el)} onClose={() => setOpen(false)}>
+          {items}
+        </ActionSheet>
       )}
     </div>
   );

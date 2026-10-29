@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { signOut, useAuth } from '@/features/auth/session';
-import { cx, glassButton, IconButton } from '@/features/editor/ui';
+import { ActionSheet, cx, glassButton, IconButton, menuItemClass, menuSurfaceClass } from '@/features/editor/ui';
+import { useIsDesktop } from '@/lib/useMedia';
 import { Icon } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { AvatarImage } from '@/features/auth/AvatarImage';
@@ -17,10 +18,12 @@ export function AccountButton() {
   const router = useRouter();
   const { status, user } = useAuth();
   const [open, setOpen] = useState(false);
+  const desktop = useIsDesktop();
   const ref = useRef<HTMLDivElement>(null);
 
+  // Liste déroulante (ordinateur) : un clic ailleurs la ferme. La feuille mobile gère elle-même son voile.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !desktop) return;
     const close = (e: Event) => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
@@ -31,7 +34,7 @@ export function AccountButton() {
       document.removeEventListener('pointerdown', close);
       document.removeEventListener('keydown', esc);
     };
-  }, [open]);
+  }, [open, desktop]);
 
   // Sans Supabase (ou pendant la lecture de la session) : rien, l'app fonctionne comme en V1.
   if (status === 'disabled' || status === 'loading') return null;
@@ -51,6 +54,28 @@ export function AccountButton() {
   }
 
   const email = user.email ?? '';
+  const items = (
+    <>
+      <Link href="/compte" role="menuitem" onClick={() => setOpen(false)} className={menuItemClass}>
+        <Icon name="user" size={desktop ? 18 : 20} />
+        {t.account}
+      </Link>
+      <button
+        type="button"
+        role="menuitem"
+        onClick={async () => {
+          setOpen(false);
+          await signOut();
+          showToast(t.signedOut);
+          router.refresh();
+        }}
+        className={menuItemClass}
+      >
+        <Icon name="logout" size={desktop ? 18 : 20} />
+        {t.signOut}
+      </button>
+    </>
+  );
   return (
     <div ref={ref} className="relative">
       <IconButton
@@ -63,33 +88,16 @@ export function AccountButton() {
       >
         <AvatarImage initial={email.charAt(0)} className="size-full" />
       </IconButton>
-      {open && (
-        <div role="menu" className="glass absolute right-0 z-30 mt-1 w-64 rounded-r1 py-s2">
+      {open && desktop && (
+        <div role="menu" className={cx('absolute right-0 z-30 mt-1 w-64', menuSurfaceClass)}>
           <p className="truncate px-s1 pb-s2 text-xs text-muted">{email}</p>
-          <Link
-            href="/compte"
-            role="menuitem"
-            onClick={() => setOpen(false)}
-            className="flex h-touch-min items-center gap-s2 px-s1 text-sm hover:bg-white/60"
-          >
-            <Icon name="user" size={18} />
-            {t.account}
-          </Link>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={async () => {
-              setOpen(false);
-              await signOut();
-              showToast(t.signedOut);
-              router.refresh();
-            }}
-            className="flex h-touch-min w-full items-center gap-s2 px-s1 text-left text-sm hover:bg-white/60"
-          >
-            <Icon name="logout" size={18} />
-            {t.signOut}
-          </button>
+          {items}
         </div>
+      )}
+      {open && !desktop && (
+        <ActionSheet title={email} onClose={() => setOpen(false)}>
+          {items}
+        </ActionSheet>
       )}
     </div>
   );

@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
 import type { AssetMeta, Design, ZoneId } from '@/types/design';
-import { quality } from '@/lib/config';
+import { quality, ZONE_IDS } from '@/lib/config';
 import { getWarnings } from '@/lib/quality';
 import { renderTextCanvas } from '@/lib/text';
 import { cmToPx } from '@/lib/units';
 import { getAsset } from '@/features/storage/db';
 import { designFileBlob, slug } from '@/features/storage/json';
-import { captureRef, type ViewId } from '@/features/scene/sceneStore';
+import { captureRef, ZONE_VIEW, type ViewId } from '@/features/scene/sceneStore';
 import { buildPdf } from '@/features/export/pdf';
 import { buildGlb } from '@/features/export/glb';
 
@@ -36,13 +36,22 @@ export async function buildExportZip(
   onStep('previews');
   const zoneUsed = (zone: ZoneId) => design.elements.some((e) => e.zone === zone && !e.hidden);
   const views = [...VIEWS, ...SLEEVE_VIEWS.filter(([, , zone]) => zoneUsed(zone)).map(([v, n]) => [v, n] as [ViewId, string])];
+  const light = new Map<ViewId, Blob>();
   for (const [view, name] of views) {
-    zip.file(`apercus/${name}-fond-clair.png`, await capture(view, 'light', quality.preview_width_px));
+    const blob = await capture(view, 'light', quality.preview_width_px);
+    light.set(view, blob);
+    zip.file(`apercus/${name}-fond-clair.png`, blob);
     zip.file(`apercus/${name}-fond-transparent.png`, await capture(view, 'transparent', quality.preview_width_px));
   }
 
   onStep('pdf');
-  zip.file('fiche-fabrication.pdf', buildPdf(design, assets, getWarnings(design, assets)));
+  // La fiche reprend l'aperçu du côté de chaque zone (devant, dos, manches).
+  const previews: Partial<Record<ZoneId, Blob>> = {};
+  for (const z of ZONE_IDS) {
+    const blob = light.get(ZONE_VIEW[z]);
+    if (blob) previews[z] = blob;
+  }
+  zip.file('fiche-fabrication.pdf', await buildPdf(design, assets, getWarnings(design, assets), previews));
 
   onStep('sources');
   const used = design.elements.filter((e) => !e.hidden);
