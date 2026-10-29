@@ -421,6 +421,16 @@ Décision du 29 octobre 2026 : les données (créations, images, miniatures) son
 
 Décision du 29 octobre 2026 : un bouton « Partager » crée pour une création un lien secret, désactivable à tout moment. La personne qui ouvre le lien voit la création en 3D, **en lecture seule**, sans compte : elle ne peut ni la modifier, ni la dupliquer, ni l'exporter. Les images restent dans l'espace privé et ne sont servies qu'à travers ce lien. Le détail technique (jeton, lecture côté serveur) est fixé par migration SQL relue avant application.
 
+### Photo de profil
+
+Décision du 29 octobre 2026 :
+
+- **Par défaut**, la photo du compte Google, reçue à la connexion. Sans photo Google, l'initiale de l'adresse.
+- **Remplacement** : depuis « Mon compte », l'utilisateur choisit une image sur son appareil. Elle est recadrée au centre en carré et réduite à 256 × 256 px (JPEG) avant l'envoi. « Retirer ma photo » revient à la photo Google.
+- **Stockage** : dans l'espace privé `designs`, à `{user_id}/profile/avatar.jpg`, affichée par une adresse signée. Seul l'utilisateur la voit : il n'y a ni catalogue ni page publique (le catalogue est écarté pour l'instant).
+- **Suppression** : effacée avec le compte, comme les autres fichiers du dossier de l'utilisateur.
+- **Affichage** : pastille du compte dans l'en-tête et page « Mon compte ».
+
 ### Contraintes
 
 - **Sécurité** : seules les créations du compte connecté sont accessibles ; les images ne sont pas publiques.

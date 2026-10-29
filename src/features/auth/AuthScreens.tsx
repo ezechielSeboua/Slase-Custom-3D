@@ -5,11 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { getSupabase } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/supabase/config';
-import { authErrorMessage, deleteAccount, providersOf, signOut, useAuth } from '@/features/auth/session';
-import { backLinkClass, BrandMark, Button, Dialog, PageLoader, WarningItem } from '@/features/editor/ui';
-import { GoogleLogo, Icon } from '@/features/editor/icons';
+import { authErrorMessage, deleteAccount, signOut, useAuth } from '@/features/auth/session';
+import { backLinkClass, BrandMark, Button, Dialog, PageLoader, Spinner, WarningItem } from '@/features/editor/ui';
+import { GoogleLogo, Icon, type IconName } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
 import { forgetAccount } from '@/features/storage/db';
+import { AvatarImage } from '@/features/auth/AvatarImage';
+import { AvatarImageError, removeAvatar, uploadAvatar, useAvatar } from '@/features/auth/avatar';
+import { DataSection, Section, SharesSection, SyncSection } from '@/features/auth/AccountSections';
 import { fr } from '@/i18n/fr';
 
 const t = fr.auth;
@@ -51,10 +54,11 @@ function GoogleButton({ next, onError }: { next: string; onError: (m: string) =>
           setBusy(false);
         }
       }}
-      className="glass glass-press flex h-h-btn w-full items-center justify-center gap-s2 rounded-r-ctl text-sm font-medium disabled:opacity-60"
+      aria-busy={busy || undefined}
+      className="glass glass-press flex h-h-btn w-full items-center justify-center gap-s2 rounded-r-ctl text-sm font-medium disabled:opacity-80"
     >
-      <GoogleLogo />
-      {t.google}
+      {busy ? <Spinner size={18} /> : <GoogleLogo />}
+      {busy ? t.redirecting : t.google}
     </button>
   );
 }
@@ -71,6 +75,12 @@ function useRedirectWhenSignedIn(next: string) {
 }
 
 // ---------- Connexion ----------
+const BENEFITS: [IconName, keyof typeof t.benefits][] = [
+  ['devices', 'devices'],
+  ['cloud', 'cloud'],
+  ['share', 'share'],
+];
+
 export function SignInScreen() {
   const params = useSearchParams();
   const next = safeNext(params.get('next'));
@@ -81,9 +91,19 @@ export function SignInScreen() {
 
   return (
     <AuthLayout title={t.signInTitle}>
-      <p className="text-sm text-muted">{t.whyText}</p>
+      <ul className="space-y-s4">
+        {BENEFITS.map(([icon, key]) => (
+          <li key={key} className="flex items-start gap-s4 text-sm">
+            <span className="glass grid size-9 shrink-0 place-items-center rounded-full text-select-strong">
+              <Icon name={icon} size={18} />
+            </span>
+            <span className="pt-2">{t.benefits[key]}</span>
+          </li>
+        ))}
+      </ul>
       <GoogleButton next={next} onError={setError} />
       {error && <WarningItem>{error}</WarningItem>}
+      <p className="text-xs text-muted">{t.dataNotice}</p>
       <p className="text-center">
         <Link href="/" className="text-sm text-muted underline">
           {t.continueWithout}
@@ -111,25 +131,27 @@ export function AccountScreen() {
   }, [status, router]);
 
   if (status !== 'signedIn' || !user) return <PageLoader label={fr.common.loading} />;
-  const providers = providersOf(user);
   const created = user.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+  const meta = user.user_metadata ?? {};
+  const name = typeof (meta.full_name ?? meta.name) === 'string' ? String(meta.full_name ?? meta.name) : '';
 
   return (
     <AuthLayout title={t.account}>
-      <dl className="space-y-s1 text-sm">
-        <div>
-          <dt className="text-xs font-semibold tracking-wide text-muted uppercase">{t.signedInAs}</dt>
-          <dd className="truncate font-medium">{user.email}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold tracking-wide text-muted uppercase">{t.signInMethods}</dt>
-          <dd>{providers.join(' · ')}</dd>
-        </div>
-        {created && <dd className="text-xs text-muted">{t.memberSince(created)}</dd>}
-      </dl>
-      <WarningItem tone="info">{t.syncInfo}</WarningItem>
-      <div className="grid gap-s4">
+      <ProfilePhoto initial={user.email?.charAt(0) ?? ''}>
+        {name && <p className="truncate font-semibold">{name}</p>}
+        <p className="truncate text-sm">{user.email}</p>
+        <p className="mt-1 flex items-center gap-1 text-xs text-muted">
+          <GoogleLogo />
+          {t.connectedWith}
+        </p>
+        {created && <p className="text-xs text-muted">{t.memberSince(created)}</p>}
+      </ProfilePhoto>
+      <SyncSection />
+      <SharesSection />
+      <DataSection />
+      <Section title={t.signOut}>
         <Button
+          className="w-full"
           onClick={async () => {
             leaving.current = true;
             await signOut();
@@ -140,14 +162,70 @@ export function AccountScreen() {
           <Icon name="logout" size={18} />
           {t.signOut}
         </Button>
-      </div>
-      <div className="border-t border-line pt-s3">
+      </Section>
+      <Section title={t.dangerTitle}>
+        <p className="text-xs text-muted">{t.deleteAccountHelp}</p>
         <button type="button" onClick={() => setConfirming(true)} className="text-sm font-medium text-warn underline">
           {t.deleteAccount}
         </button>
-      </div>
+      </Section>
       {confirming && <DeleteAccountDialog onClose={() => setConfirming(false)} onDeleted={leave} />}
     </AuthLayout>
+  );
+}
+
+/** Photo de profil : celle de Google par défaut, remplaçable par une image de l'appareil. */
+function ProfilePhoto({ initial, children }: { initial: string; children: React.ReactNode }) {
+  const custom = useAvatar((s) => s.custom);
+  const hasPhoto = useAvatar((s) => Boolean(s.url));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const run = async (fn: () => Promise<void>, done: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+      showToast(done);
+    } catch (e) {
+      setError(e instanceof AvatarImageError ? t.photoInvalid : t.photoError);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <section aria-label={t.photo} className="space-y-s4">
+      <div className="flex items-center gap-s1">
+        <AvatarImage initial={initial} className="glass size-20" textClass="text-2xl" />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-s1 gap-y-s2">
+        <Button busy={busy} disabled={busy} onClick={() => fileRef.current?.click()}>
+          {hasPhoto ? t.photoChange : t.photoAdd}
+        </Button>
+        {custom && (
+          <button type="button" disabled={busy} onClick={() => run(removeAvatar, t.photoRemoved)} className="text-sm text-muted underline disabled:opacity-45">
+            {t.photoRemove}
+          </button>
+        )}
+      </div>
+      <p className="text-xs text-muted">{t.photoHelp}</p>
+      {error && <WarningItem>{error}</WarningItem>}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          if (f) run(() => uploadAvatar(f), t.photoSaved);
+        }}
+      />
+    </section>
   );
 }
 

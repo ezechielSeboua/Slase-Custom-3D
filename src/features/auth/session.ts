@@ -44,13 +44,6 @@ export async function deleteAccount(): Promise<boolean> {
   return !error;
 }
 
-/** Méthodes de connexion du compte, pour l'affichage (« Google »). */
-export function providersOf(user: User): string[] {
-  const ids = new Set((user.identities ?? []).map((i) => i.provider));
-  if (!ids.size && user.app_metadata?.provider) ids.add(user.app_metadata.provider);
-  return [...ids].map((p) => (p === 'google' ? fr.auth.providerGoogle : p));
-}
-
 /** Message en français pour une erreur Supabase Auth (codes documentés), sinon un message générique. */
 export function authErrorMessage(error: AuthError | null | undefined): string {
   const t = fr.auth.errors;

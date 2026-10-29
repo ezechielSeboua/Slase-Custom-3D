@@ -7,6 +7,7 @@ import { signOut, useAuth } from '@/features/auth/session';
 import { cx, glassButton, IconButton } from '@/features/editor/ui';
 import { Icon } from '@/features/editor/icons';
 import { showToast } from '@/features/editor/Toast';
+import { AvatarImage } from '@/features/auth/AvatarImage';
 import { fr } from '@/i18n/fr';
 
 const t = fr.auth;
@@ -58,11 +59,9 @@ export function AccountButton() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="rounded-full"
+        className="rounded-full p-0"
       >
-        <span className="text-sm font-semibold uppercase" aria-hidden="true">
-          {email.charAt(0) || '?'}
-        </span>
+        <AvatarImage initial={email.charAt(0)} className="size-full" />
       </IconButton>
       {open && (
         <div role="menu" className="glass absolute right-0 z-30 mt-1 w-64 rounded-r1 py-s2">

@@ -18,7 +18,7 @@ export function SyncListener() {
       if (next === uid) return;
       const first = uid === undefined;
       uid = next;
-      useSync.setState({ pulled: false, status: next ? 'syncing' : 'off' });
+      useSync.setState({ pulled: false, lastSynced: null, status: next ? 'syncing' : 'off' });
       // Changement de compte : la liste visible n'est plus la même.
       if (!first) notifyListChanged();
       if (next) void syncNow();

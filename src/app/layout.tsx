@@ -5,6 +5,7 @@ import { GlassDrops } from '@/features/editor/GlassDrops';
 import { Toast } from '@/features/editor/Toast';
 import { AuthListener } from '@/features/auth/session';
 import { SyncListener } from '@/features/storage/SyncListener';
+import { AvatarListener } from '@/features/auth/avatar';
 
 export const metadata: Metadata = {
   title: { default: fr.appName, template: `%s · ${fr.appName}` },
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Toast />
         <AuthListener />
         <SyncListener />
+        <AvatarListener />
       </body>
     </html>
   );

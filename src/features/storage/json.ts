@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 import type { AssetRecord, Design, DesignElement } from '@/types/design';
 import { getAsset, putAsset, putDesign } from '@/features/storage/db';
 import { GARMENT_IDS, FIT_IDS, ZONE_IDS } from '@/lib/config';
@@ -72,6 +73,18 @@ export async function importDesignFile(text: string): Promise<Design> {
   }
   await putDesign(f.design);
   return f.design;
+}
+
+/**
+ * Toutes les créations données (celles du compte connecté), une par fichier .json avec ses images :
+ * le format que « Importer .json » relit. Sert au téléchargement des données du compte.
+ */
+export async function buildDesignsArchive(designs: Design[]): Promise<Blob> {
+  const zip = new JSZip();
+  for (const d of designs) {
+    zip.file(`${slug(d.name)}-${d.id.slice(0, 8)}.json`, JSON.stringify(await buildDesignFile(d), null, 2));
+  }
+  return zip.generateAsync({ type: 'blob' });
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

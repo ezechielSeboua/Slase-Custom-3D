@@ -17,9 +17,15 @@ export type SyncStatus = 'off' | 'syncing' | 'synced' | 'offline' | 'error';
 
 /**
  * `revision` augmente quand la liste locale change du fait de la synchronisation (ou du compte connecté) ;
- * `pulled` : la liste du compte a été reçue au moins une fois depuis la connexion.
+ * `pulled` : la liste du compte a été reçue au moins une fois depuis la connexion ;
+ * `lastSynced` : fin de la dernière synchronisation réussie (ISO), pour ce chargement de page.
  */
-export const useSync = create<{ status: SyncStatus; revision: number; pulled: boolean }>(() => ({ status: 'off', revision: 0, pulled: false }));
+export const useSync = create<{ status: SyncStatus; revision: number; pulled: boolean; lastSynced: string | null }>(() => ({
+  status: 'off',
+  revision: 0,
+  pulled: false,
+  lastSynced: null,
+}));
 
 const bump = () => useSync.setState((s) => ({ revision: s.revision + 1 }));
 
@@ -96,7 +102,12 @@ async function cycle(pull: boolean) {
     let changed = pull ? await pullAll(uid) : false;
     changed = (await pushPending(uid)) || changed;
     if (currentUserId() !== uid) return;
-    useSync.setState((s) => ({ status: 'synced', pulled: s.pulled || pull, revision: changed ? s.revision + 1 : s.revision }));
+    useSync.setState((s) => ({
+      status: 'synced',
+      pulled: s.pulled || pull,
+      revision: changed ? s.revision + 1 : s.revision,
+      lastSynced: new Date().toISOString(),
+    }));
   } catch {
     if (currentUserId() !== uid) return;
     useSync.setState({ status: navigator.onLine ? 'error' : 'offline' });

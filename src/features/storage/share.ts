@@ -28,6 +28,25 @@ export async function createShare(designId: string): Promise<string> {
   return data.token;
 }
 
+export interface ActiveShare {
+  token: string;
+  designId: string;
+  name: string;
+  createdAt: string;
+}
+
+/** Liens actifs du compte, du plus récent au plus ancien (créations supprimées exclues : leur lien ne mène à rien). */
+export async function listShares(): Promise<ActiveShare[]> {
+  const { data, error } = await client()
+    .from('shares')
+    .select('token, design_id, created_at, designs(name, deleted_at)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data as unknown as { token: string; design_id: string; created_at: string; designs: { name: string; deleted_at: string | null } | null }[])
+    .filter((r) => r.designs && !r.designs.deleted_at)
+    .map((r) => ({ token: r.token, designId: r.design_id, name: r.designs!.name, createdAt: r.created_at }));
+}
+
 /** Désactive le lien : il ne mène plus à rien, pour personne. */
 export async function deleteShare(designId: string) {
   const { error } = await client().from('shares').delete().eq('design_id', designId);
